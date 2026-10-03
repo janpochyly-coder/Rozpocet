@@ -233,6 +233,7 @@ function incomeBlock(m){
   const M=M_(m),recv=received(m),entries=incTxm(m).slice().sort(byDateDesc),shown=S.incAll?entries:entries.slice(0,2);
   return '<div class="blk"><h3>Príjmy <span class="small num">'+eur(recv)+(M.status!=='closed'?' z '+eur(incExp(m))+' očakávaných':'')+'</span></h3><section class="card">'+
    (entries.length?'<div class="list">'+shown.map(t=>'<div class="li"><div class="t"><b>'+esc(t.note)+'</b><span>'+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num" style="color:var(--ok)">+'+eur2(t.amt)+'</span></div>').join('')+'</div>'+(entries.length>2?'<button class="link" data-act="incAll" aria-expanded="'+S.incAll+'">'+(S.incAll?'Zobraziť menej':'Zobraziť všetky '+entries.length)+'</button>':''):'<p class="empty">V tomto mesiaci zatiaľ žiadny príjem.</p>')+
+   (M.status!=='closed'&&incExp(m)===0&&recv===0?'<p class="note" style="margin-top:10px">Rozpočet a desiatky sa počítajú z príjmu. Nastavte očakávaný príjem J a I.</p><button class="btn sm" style="margin-top:8px" data-act="editM" data-m="'+m+'">Nastaviť očakávaný príjem</button>':'')+
    '<button class="btn ghost" style="width:100%;margin-top:12px" data-act="addinc">Pridať príjem</button></section></div>';
 }
 function planAmt(m,p){return p.amt===null?income(m)*.1:p.amt;}
@@ -262,13 +263,12 @@ function doneBlock(m){
 }
 function viewHome(){
   const m=S.month, spent=total(m), bud=budget(m), left=bud-spent, open=M_(m).status==='active';
-  const need=(open&&incExp(m)===0&&received(m)===0)?'<section class="card"><b>Nastavte príjem</b><p class="small" style="margin:4px 0 10px">Rozpočet a desiatky sa počítajú z príjmu. Zadajte očakávaný príjem J a I.</p><button class="btn sm" data-act="editM" data-m="'+m+'">Nastaviť</button></section>':'';
   const st=open?'':'<div style="margin-top:12px">'+pill(left>=0?{k:'ok',t:'Pod rozpočtom',i:'check'}:{k:'bad',t:'Nad rozpočtom',i:'over'})+'</div>';
   return head('Prehľad')+
   '<section class="card hero"><div class="lbl">Minuté · '+mname(m)+'</div><div class="big num">'+eur(spent)+'</div>'+
   '<div class="track" role="img" aria-label="Minuté '+eur(spent)+' z '+eur(bud)+'"><div class="fill'+(spent>bud?' bad':'')+'" style="width:'+pctOf(spent,bud)+'%"></div></div>'+
   '<div class="row-between small" style="margin-top:8px"><span class="num">z '+eur(bud)+' rozpočtu</span><span class="num">'+(left>=0?'zostáva <b>'+eur(left)+'</b>':'nad o <b>'+eur(-left)+'</b>')+'</span></div>'+st+'</section>'+
-  need+upcomingBlock(m)+gradualBlock(m)+doneBlock(m);
+  upcomingBlock(m)+gradualBlock(m)+doneBlock(m);
 }
 
 /* ---------- rozpočet ---------- */
