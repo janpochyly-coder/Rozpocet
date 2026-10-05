@@ -10,6 +10,11 @@ Rodinná aplikácia na kontrolu rozpočtu pre dvoch (J a I). Statická PWA bez b
 - **Synchronizácia:** každý zápis ide hneď do databázy. Ostatné zariadenia si zmeny načítajú do 15 sekúnd, pri otvorení aplikácie a po obnovení pripojenia.
 - Kód je ako heslo. Kto ho má, má plný prístup, preto ho nezdieľajte nikde inde. Pri úniku vytvorte novú domácnosť.
 
+## Rozloženie
+
+- Mobil a úzke okno: jeden stĺpec, navigácia dole.
+- Počítač (šírka od 1000 px): bočný panel s navigáciou, obsah v dvoch stĺpcoch (v širokom okne v troch), okná na zápis a úpravu mesiaca ako dialóg v strede.
+
 ## Štruktúra
 
 - `index.html`, `app.css`, `app.js`: aplikácia (čistý JavaScript, bez knižníc)

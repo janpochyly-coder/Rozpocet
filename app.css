@@ -300,3 +300,39 @@ body{padding:0;padding-top:env(safe-area-inset-top,0px)}
 .code{font-family:var(--f-display);font-size:28px;font-weight:700;letter-spacing:.12em}
 .toast.err{background:var(--bad);color:#fff}
 .loading{display:grid;place-items:center;height:100%;color:var(--muted);font-weight:600}
+
+/* --- obsah obrazovky: na mobile jeden stĺpec --- */
+.cols{display:flex;flex-direction:column;gap:20px}
+
+/* --- desktop: bočný panel a viac stĺpcov --- */
+@media (min-width:1000px){
+  body{padding:20px}
+  .phone{max-width:1320px;width:100%;max-height:none;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);grid-template-rows:minmax(0,1fr);border-radius:20px;border:1px solid var(--line)}
+  .tabbar{grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:20px 14px;border-top:0;border-right:1px solid var(--line);background:var(--surface);overflow-y:auto}
+  .tabbar::before{content:'Rodinný rozpočet';order:-2;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.01em;padding:4px 10px 18px}
+  .tab{flex-direction:row;justify-content:flex-start;gap:12px;font-size:15px;padding:11px 12px;border-radius:12px;color:var(--ink-2)}
+  .tab:hover{background:var(--surface-2)}
+  .tab[aria-current="page"]{background:var(--surface-2);color:var(--ink)}
+  .fab{order:-1;width:100%;height:auto;border-radius:12px;padding:12px 14px;display:flex;gap:10px;justify-content:center;align-items:center;font-weight:700;font-size:15px;margin-bottom:12px}
+  .fab::after{content:'Pridať zápis'}
+  .fab svg{width:20px;height:20px}
+  .screen{grid-column:2;grid-row:1;padding:28px 32px 40px}
+  .cols{display:block;column-count:2;column-gap:28px}
+  .cols>*{break-inside:avoid;margin-bottom:22px}
+  .cols>.sh,.cols>.seg.full,.cols>.card.hero,.cols>.warnbox{column-span:all}
+  .cols>.seg.full{max-width:520px}
+  .sh h1{font-size:30px}
+  .card.hero .big{font-size:64px}
+  .b-head:hover,.li:hover{background:var(--surface-2)}
+  .li{border-radius:8px}
+  .sheet-wrap{align-items:center;justify-content:center;padding:24px}
+  .sheet{max-width:520px;border-radius:20px;max-height:100%}
+  .editor{top:28px;bottom:28px;left:50%;right:auto;transform:translateX(-50%);width:min(760px,calc(100% - 48px));border-radius:20px;border:1px solid var(--line);box-shadow:0 0 0 3000px var(--overlay);overflow:hidden}
+  .toast{left:auto;right:28px;bottom:28px;width:360px}
+  .gate{align-items:center}
+  .gate>*{width:100%;max-width:440px}
+}
+@media (min-width:1700px){
+  .phone{max-width:1560px}
+  .cols{column-count:3}
+}

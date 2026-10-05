@@ -492,7 +492,7 @@ function copyText(t){
 }
 function render(keepScroll){
   const sc=$('screen'),st=sc.scrollTop;
-  sc.innerHTML=({home:viewHome,bud:viewBudgets,ana:viewAnalytics,plan:viewPlan})[S.tab]();
+  sc.innerHTML='<div class="cols">'+({home:viewHome,bud:viewBudgets,ana:viewAnalytics,plan:viewPlan})[S.tab]()+'</div>';
   sc.scrollTop=keepScroll?st:0;
   hideTip();renderTabs();
 }
