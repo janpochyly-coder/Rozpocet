@@ -88,7 +88,7 @@ const DEFPLAN=[
 ];
 const S={
   tab:'home', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
-  months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
+  months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
 };
 
 /* ---------- mesiace, limity, týždne ---------- */
@@ -127,7 +127,7 @@ async function rpc(fn,args){
 }
 const monthPayload=(E_,dr,id,plan)=>({id:id||null,y:E_.y,mo:E_.mo,inc_j:dr.inc.J,inc_i:dr.inc.I,limits:dr.lim,plan:plan});
 async function createFirstMonth(){
-  const lim={};Object.entries(DEFLIM).forEach(([k,v])=>{lim[k]=v;});
+  const lim={};Object.entries(DEFLIM).forEach(([k,v])=>{lim[k]=v;});(CAT.dlh.subs||[]).forEach(d=>{lim['dlh.'+d.id]=null;});
   await rpc('save_month',{p_code:S.code,p_month:{y:TODAY.getFullYear(),mo:TODAY.getMonth(),inc_j:0,inc_i:0,limits:lim,plan:DEFPLAN.map(p=>({d:p.d,name:p.name,key:p.key,amt:p.amt}))}});
 }
 async function loadAll(retry,force){
@@ -135,6 +135,7 @@ async function loadAll(retry,force){
   const st=await rpc('get_state',{p_code:S.code});
   const sig=JSON.stringify(st);
   if(!force&&S.loaded&&sig===S.sig)return 'same';
+  CAT.dlh.subs=st.debts.map(d=>({id:d.sub,name:d.name,bal:+d.balance,asOf:parseD(d.as_of)}));
   if(!st.months.length){
     if(retry)throw new Error('Prvý mesiac sa nepodarilo vytvoriť');
     await createFirstMonth();
@@ -149,6 +150,7 @@ async function loadAll(retry,force){
   S.tx=st.transactions.filter(r=>idx[r.month_id]!==undefined).map(r=>({id:r.id,m:idx[r.month_id],dt:parseD(r.dt),cat:r.cat,sub:r.sub,amt:+r.amount,who:r.who,note:r.note}));
   S.incTx=st.incomes.filter(r=>idx[r.month_id]!==undefined).map(r=>({id:r.id,m:idx[r.month_id],dt:parseD(r.dt),who:r.who,amt:+r.amount,note:r.note}));
   S.debts=st.debts;
+  S.items={};(st.items||[]).forEach(x=>{S.items[x.key]={stav:x.stav===null?null:+x.stav,auto:!!x.auto,asOf:parseD(x.as_of)};});
   CAT.dlh.subs=st.debts.map(d=>({id:d.sub,name:d.name,bal:+d.balance,asOf:parseD(d.as_of)}));
   let k=keepId?S.months.findIndex(x=>x.id===keepId):-1;
   if(k<0||S.months[k].status==='planned'){k=S.months.findIndex(x=>x.status==='active');if(k<0){const v=vis();k=v.length?v[v.length-1]:0;}}
@@ -190,6 +192,25 @@ const baseLimit=(c,m)=>c.kind==='tithe'?income(m)*.1:c.kind==='manual'?0:(c.subs
 const rawPlan=(m=S.month)=>sum(CATS.map(c=>baseLimit(c,m)));
 const leftover=(m=S.month)=>Math.max(0,income(m)-sum(CATS.filter(c=>c.kind!=='debt').map(c=>baseLimit(c,m))));
 const catLimit=(c,m=S.month)=>baseLimit(c,m);
+const isIn=(m,key)=>Object.prototype.hasOwnProperty.call(M_(m).lim,key);
+const txKey=t=>t.sub?t.cat+'.'+t.sub:t.cat;
+function itemList(){
+  const out=[];
+  CATS.forEach(c=>{
+    if(c.kind==='weeks'||c.kind==='manual'||c.kind==='tithe')return;
+    if(c.subs.length)c.subs.forEach(x=>out.push({key:c.id+'.'+x.id,cat:c,name:x.name,debt:c.kind==='debt',sub:x}));
+    else out.push({key:c.id,cat:c,name:c.name,debt:false});
+  });
+  return out;
+}
+function itemStav(it){
+  if(it.debt)return{tracked:true,value:debtBal(it.sub),auto:true};
+  const x=S.items[it.key];
+  if(!x||x.stav===null)return{tracked:false};
+  const used=x.auto?sum(S.tx.filter(t=>txKey(t)===it.key&&t.dt>=x.asOf).map(t=>t.amt)):0;
+  return{tracked:true,value:x.stav-used,auto:x.auto,base:x.stav};
+}
+const stavTxt=it=>{const v=itemStav(it);return v.tracked?'stav '+eur(v.value):'';};
 const payDayOf=(m,key)=>{const p=M_(m).plan.find(x=>x.key===key);return p?p.d:null;};
 const budget=(m=S.month)=>sum(CATS.map(c=>catLimit(c,m)));
 const debtBal=s=>s.bal-sum(S.tx.filter(t=>t.cat==='dlh'&&t.sub===s.id&&t.dt>=s.asOf).map(t=>t.amt));
@@ -280,12 +301,14 @@ function subsHtml(c,m){
   const ss=bySub(m);
   if(c.kind==='tithe') return '<div class="subs"><p class="small" style="margin:0 0 8px">Vždy 10 % z príjmu ('+eur(income(m))+'). Limit sa nastavuje sám.</p>'+(txm(m).some(t=>t.cat==='des')?txRows(txm(m).filter(t=>t.cat==='des')):'<p class="empty">V tomto mesiaci zatiaľ bez zápisu.</p>')+'</div>';
   if(c.kind==='manual') return '<div class="subs"><p class="small" style="margin:0 0 8px">Bez limitu, len ručné zápisy.</p>'+(txm(m).some(t=>t.cat==='ost')?txRows(txm(m).filter(t=>t.cat==='ost').sort(byDateDesc)):'<p class="empty">V tomto mesiaci zatiaľ bez zápisu.</p>')+'</div>';
-  if(!c.subs.length){const pd0=payDayOf(m,c.id);return '<div class="subs"><div class="sub"><div class="nm">Mesačný limit'+(pd0?'<span>platba '+pd0+'. v mesiaci</span>':'')+'</div>'+stepper('lim','data-c="'+c.id+'"',getLim(m,c.id)||0,'limit',10)+'</div></div>';}
+  if(!c.subs.length){const pd0=payDayOf(m,c.id),st0=stavTxt({key:c.id,debt:false});return '<div class="subs"><div class="sub"><div class="nm">Mesačný limit'+((pd0||st0)?'<span>'+[st0,pd0?'platba '+pd0+'. v mesiaci':''].filter(Boolean).join(' · ')+'</span>':'')+'</div>'+stepper('lim','data-c="'+c.id+'"',getLim(m,c.id)||0,'limit',10)+'</div></div>';}
   const debtNote=c.kind==='debt'?'<p class="small" style="margin:0 0 6px">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách: '+eur(leftover(m))+'. Zostatok dlhov spolu: '+eur(sum(c.subs.map(debtBal)))+'.</p>':'';
-  return '<div class="subs">'+debtNote+c.subs.map(s=>{
+  const subsIn=c.subs.filter(x=>isIn(m,c.id+'.'+x.id)||(ss[c.id+'.'+x.id]||0)>0);
+  if(!subsIn.length)return '<div class="subs"><p class="small" style="margin:0">V tomto mesiaci tu nie je žiadna položka. Pridáte ju v karte Plán (Upraviť mesiac, Pridať z výdavkov).</p></div>';
+  return '<div class="subs">'+debtNote+subsIn.map(s=>{
     const key=c.id+'.'+s.id, v=ss[key]||0, l=getLim(m,key), has=l!==null, pd=payDayOf(m,key);
     const st=has?status(v,l):null;
-    return '<div class="sub"><div class="nm">'+subName(c,s,m)+'<span class="num">'+eur(v)+(has?' z '+eur(l):' · bez limitu')+(c.kind==='debt'?' · zostatok '+eur(debtBal(s)):'')+(pd?' · platba '+pd+'.':'')+'</span></div>'+stepper('lim','data-c="'+c.id+'" data-s="'+s.id+'"',l||0,'limit',c.kind==='debt'?25:(has&&l>=100?10:5))+(has?'<div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(v,l)+'%"></div></div>':'')+'</div>';
+    return '<div class="sub"><div class="nm">'+subName(c,s,m)+'<span class="num">'+eur(v)+(has?' z '+eur(l):' · bez limitu')+(c.kind==='debt'?' · zostatok '+eur(debtBal(s)):(stavTxt({key:key,debt:false})?' · '+stavTxt({key:key,debt:false}):''))+(pd?' · platba '+pd+'.':'')+'</span></div>'+stepper('lim','data-c="'+c.id+'" data-s="'+s.id+'"',l||0,'limit',c.kind==='debt'?25:(has&&l>=100?10:5))+(has?'<div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(v,l)+'%"></div></div>':'')+'</div>';
   }).join('')+'</div>';
 }
 function grpStats(m,list){const cc=byCat(m);return {spent:sum(list.map(c=>cc[c.id])),limit:sum(list.map(c=>catLimit(c,m)))};}
@@ -294,14 +317,19 @@ function catRow(c,m,cc){
   const right=lim>0?'<b>'+eur(v)+'</b> <i>/ '+eur(lim)+'</i>':'<b>'+eur(v)+'</b> <i>bez limitu</i>';
   return '<div class="b"><button class="b-head" data-act="exp" data-c="'+c.id+'" aria-expanded="'+op+'"><div class="b-top"><span class="ico">'+ic(c.icon,18)+'</span><div class="t"><b>'+c.name+'</b>'+flag(s)+'</div><span class="num rt2">'+right+'</span></div>'+(lim>0?'<div class="track thin"><div class="fill '+(s.k==='ok'?'':s.k)+'" style="width:'+pctOf(v,lim)+'%"></div></div>':'')+'</button>'+(op?subsHtml(c,m):'')+'</div>';
 }
+function catVisible(c,m,cc){
+  if(c.kind==='tithe'||c.kind==='weeks'||c.kind==='manual'||c.kind==='debt')return true;
+  if(cc[c.id]>0)return true;
+  return c.subs.length?c.subs.some(x=>isIn(m,c.id+'.'+x.id)):isIn(m,c.id);
+}
 function viewBudgets(){
   const m=S.month, cc=byCat(m);
   const gl=k=>CATS.filter(c=>c.grp===k);
-  const sel=S.grp, list=sel==='all'?CATS:gl(sel);
+  const sel=S.grp, list=(sel==='all'?CATS:gl(sel)).filter(c=>catVisible(c,m,cc));
   const g=grpStats(m,list), left=g.limit-g.spent, st=status(g.spent,g.limit);
   const tabs=[['all','Spolu']].concat(GRPS).map(x=>'<button data-act="grp" data-g="'+x[0]+'" aria-pressed="'+(S.grp===x[0])+'">'+x[1]+'</button>').join('');
   const summary='<section class="card"><div class="small">'+(left>=0?'Zostáva':'Prekročené o')+'</div><div class="big2 num">'+eur(Math.abs(left))+'</div><div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(g.spent,g.limit)+'%"></div></div><div class="row-between small" style="margin-top:8px"><span>Minuté <b class="num">'+eur(g.spent)+'</b></span><span class="num">z '+eur(g.limit)+'</span></div></section>';
-  const body=sel==='all'?GRPS.map(gr=>{const l=gl(gr[0]),s2=grpStats(m,l);return '<div class="blk"><h3>'+gr[1]+' <span class="small num">'+eur(s2.spent)+' z '+eur(s2.limit)+'</span></h3><section class="card bud">'+l.map(c=>catRow(c,m,cc)).join('')+'</section></div>';}).join(''):'<section class="card bud">'+list.map(c=>catRow(c,m,cc)).join('')+'</section>';
+  const body=sel==='all'?GRPS.map(gr=>{const l=gl(gr[0]),s2=grpStats(m,l);return '<div class="blk"><h3>'+gr[1]+' <span class="small num">'+eur(s2.spent)+' z '+eur(s2.limit)+'</span></h3><section class="card bud">'+l.filter(c=>catVisible(c,m,cc)).map(c=>catRow(c,m,cc)).join('')+'</section></div>';}).join(''):'<section class="card bud">'+list.map(c=>catRow(c,m,cc)).join('')+'</section>';
   const raw=rawPlan(m),inc=income(m);
   return head('Rozpočet')+'<div class="seg full" role="group" aria-label="Skupina výdavkov">'+tabs+'</div>'+summary+(sel==='all'?incomeBlock(m):'')+body+
     '<p class="note">Zmena limitu platí len pre mesiac '+mname(m)+'. Celý mesiac upravíte v karte Plán.</p>'+(raw>inc?'<div class="warnbox">Plán bez dlhov prevyšuje príjem o '+eur(raw-inc)+'.</div>':'');
@@ -399,6 +427,43 @@ function householdBlock(){
    '<button class="btn ghost" style="width:100%;margin-top:8px" data-act="copyCode" data-v="'+esc(S.code||'')+'">Skopírovať kód</button>'+
    '<button class="link" data-act="disconnect">Odpojiť toto zariadenie</button></section></div>';
 }
+function itemsBlock(){
+  const its=itemList(),byCat={};
+  its.forEach(it=>{(byCat[it.cat.id]=byCat[it.cat.id]||[]).push(it);});
+  const groups=CATS.filter(c=>byCat[c.id]).map(c=>{
+    const rows=byCat[c.id].map(it=>{
+      const v=itemStav(it),open=S.itemOpen===it.key;
+      let panel='';
+      if(open){
+        if(it.debt)panel='<div class="ip"><p class="small" style="margin:0">Zostatok dlhu '+eur(v.value)+'. Každá splátka, ktorú pridáte, ho zníži automaticky.</p></div>';
+        else{
+          const x=S.items[it.key]||{stav:null,auto:false};
+          panel='<div class="ip"><label class="fld2" for="i-stav">Stav (€)<input id="i-stav" class="num-in" type="text" inputmode="decimal" value="'+(x.stav===null?'':x.stav)+'" placeholder="bez stavu"></label>'+
+            '<label class="chk" for="i-auto"><input id="i-auto" type="checkbox"'+(x.auto?' checked':'')+'> Automaticky odrátavať, keď sa pridá výdavok z tejto položky</label>'+
+            '<p class="note" style="margin:0">Zapnuté: stav sa zníži o každý výdavok pridaný od dnešného dňa. Bez stavu sa nič nesleduje.</p>'+
+            '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button></div></div>';
+        }
+      }
+      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'"><span class="nm">'+esc(c.subs.length?it.name:c.name)+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
+    }).join('');
+    return '<div class="ig"><div class="ig-h">'+c.name+'</div>'+rows+'</div>';
+  }).join('');
+  return '<div class="blk"><h3>Výdavky <span class="small">'+its.length+' položiek</span></h3><section class="card"><p class="small" style="margin:0 0 6px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore (Pridať z výdavkov).</p>'+groups+'</section></div>';
+}
+async function saveItem(){
+  const key=S.itemOpen;if(!key)return;
+  const raw=$('i-stav').value.trim(),stav=raw===''?null:parseFloat(raw.replace(/\s/g,'').replace(',','.'));
+  if(raw!==''&&(!isFinite(stav)||stav<0)){toast('Zadajte platný stav.',true);return;}
+  const auto=$('i-auto').checked&&stav!==null;
+  S.busy++;
+  try{
+    await rpc('set_item',{p_code:S.code,p_key:key,p_stav:stav,p_auto:auto});
+    const old=S.items[key];
+    S.items[key]={stav:stav,auto:auto,asOf:(old&&old.stav===stav&&old.auto===auto)?old.asOf:new Date(TODAY)};
+    S.itemOpen=null;render(true);toast('Položka uložená');
+  }catch(err){console.error(err);toast('Položku sa nepodarilo uložiť',true);}
+  finally{S.busy--;}
+}
 function viewPlan(){
   const act=S.months.findIndex(x=>x.status==='active');
   const planned=S.months.map((x,i)=>i).filter(i=>S.months[i].status==='planned');
@@ -412,7 +477,7 @@ function viewPlan(){
   }
   const plHtml='<div class="blk"><h3>Plánované mesiace</h3><section class="card">'+(planned.length?'<div class="list">'+planned.map(i=>'<div class="li"><div class="t"><b>'+mname(i)+' '+M_(i).y+'</b><span class="num">rozpočet '+eur(budget(i))+' · príjem '+eur(incExp(i))+'</span></div><button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť</button></div>').join('')+'</div>':'<p class="empty">Zatiaľ žiadny plánovaný mesiac.</p>')+'<button class="btn" style="width:100%;margin-top:12px" data-act="newM">Pridať mesiac '+MN12[nx.mo].toLowerCase()+' '+nx.y+'</button></section></div>';
   const hiHtml='<div class="blk"><h3>História</h3><section class="card">'+(closed.length?'<div class="list">'+closed.map(i=>{const sp=total(i),rest=income(i)-sp;return '<div class="li col"><div class="t"><b>'+mname(i)+' '+M_(i).y+'</b><span class="num">minuté '+eur(sp)+' · zostalo '+eur(rest)+'</span></div><div class="btns"><button class="btn ghost sm" data-act="viewM" data-m="'+i+'">Zobraziť</button><button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť</button></div></div>';}).join('')+'</div>':'<p class="empty">Zatiaľ žiadny uzavretý mesiac.</p>')+'</section></div>';
-  return '<div class="sh"><h1>Plán</h1></div>'+actHtml+plHtml+hiHtml+householdBlock();
+  return '<div class="sh"><h1>Plán</h1></div>'+actHtml+plHtml+itemsBlock()+hiHtml+householdBlock();
 }
 
 /* ---------- editor mesiaca ---------- */
@@ -439,20 +504,34 @@ function renderEditor(keep){
     return '<div class="dt"><button type="button" class="switch sm" role="switch" aria-checked="'+on+'" data-act="dateToggle" data-key="'+key+'" aria-label="Dátum platby: '+esc(label)+'"></button><span>Dátum platby</span>'+(on?'<label class="dtl" for="e-date-'+idk+'">Deň v mesiaci<input class="num-in sm" type="text" inputmode="numeric" id="e-date-'+idk+'" data-k="date.'+key+'" value="'+dr.dates[key]+'"></label>':'')+'</div>';
   };
   const limInput=(id,key,label,aria)=>{const v=dr.lim[key];return '<div class="fr"><label for="'+id+'">'+label+'</label><input class="num-in" type="text" inputmode="decimal" id="'+id+'" data-k="lim.'+key+'" value="'+(v===null||v===undefined?'':v)+'" placeholder="bez limitu" aria-label="Limit '+esc(aria)+'"></div>';};
+  const inLim=k=>Object.prototype.hasOwnProperty.call(dr.lim,k);
+  const offBtn=(key,label)=>'<button type="button" class="link sm-link" data-act="itemOff" data-key="'+key+'" aria-label="Odstrániť z mesiaca: '+esc(label)+'">Odstrániť</button>';
+  const dateRow2=(key,label)=>dateRow(key,label).replace(/<\/div>$/,offBtn(key,label)+'</div>');
   const limRows=CATS.filter(c=>c.kind!=='manual').map(c=>{
     if(c.kind==='tithe') return '<div class="eg"><div class="eg-h">'+c.name+'</div><p class="small" style="margin:0">10 % z príjmu, teda '+eur(incSum*.1)+'.</p>'+dateRow('des',c.name)+'</div>';
-    let rows;
+    let rows='';
     if(c.subs.length){
-      rows=c.subs.map((x,k)=>{const key=c.id+'.'+x.id,lbl=c.kind==='weeks'?weekInfoM(M,k).label:x.name;return '<div class="fr2">'+limInput('e-lim-'+c.id+'-'+x.id,key,lbl,x.name)+(c.kind==='weeks'?'':dateRow(key,x.name))+'</div>';}).join('');
-    } else rows='<div class="fr2">'+limInput('e-lim-'+c.id,c.id,'Mesačný limit',c.name)+dateRow(c.id,c.name)+'</div>';
-    const hint=c.kind==='debt'?'<p class="small" style="margin:0 0 4px">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách sa dá použiť na splátky.</p>':'';
+      rows=c.subs.map((x,k)=>{
+        const key=c.id+'.'+x.id;
+        if(c.kind!=='weeks'&&!inLim(key))return '';
+        const sv=c.kind==='weeks'?'':stavTxt({key:key,debt:c.kind==='debt',sub:x}),lbl=c.kind==='weeks'?weekInfoM(M,k).label:x.name+(sv?' <span class="small">· '+sv+'</span>':'');
+        return '<div class="fr2">'+limInput('e-lim-'+c.id+'-'+x.id,key,lbl,x.name)+(c.kind==='weeks'?'':dateRow2(key,x.name))+'</div>';
+      }).join('');
+    } else if(inLim(c.id)){
+      const sv=stavTxt({key:c.id,debt:false});
+      rows='<div class="fr2">'+limInput('e-lim-'+c.id,c.id,'Mesačný limit'+(sv?' <span class="small">· '+sv+'</span>':''),c.name)+dateRow2(c.id,c.name)+'</div>';
+    }
+    if(!rows)return '';
+    const hint=c.kind==='debt'?'<p class="small" style="margin:0 0 4px">Limit je mesačná splátka.</p>':'';
     return '<div class="eg"><div class="eg-h">'+c.name+'</div>'+hint+rows+'</div>';
   }).join('');
+  const avail=itemList().filter(it=>!inLim(it.key));
+  const pick=avail.length?CATS.filter(c=>avail.some(it=>it.cat.id===c.id)).map(c=>'<div class="gl">'+c.name+'</div><div class="subchips">'+avail.filter(it=>it.cat.id===c.id).map(it=>{const sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div>').join(''):'<p class="empty">Všetky výdavky už v mesiaci sú.</p>';
   ed.innerHTML='<div class="ed-head"><button type="button" class="x" data-act="edClose" aria-label="Zavrieť">'+ic('x',18)+'</button><h2>'+(E.mode==='new'?'Nový mesiac':'Upraviť mesiac')+' · '+MN12[E.mo]+' '+E.y+'</h2></div>'+
    '<div class="ed-body">'+(E.mode==='new'?'<p class="small" style="margin:0">Predvyplnené podľa naposledy pridaného mesiaca. Upravte, čo treba, a uložte.</p>':'')+
    '<section class="card"><h3 class="eh">Očakávaný príjem</h3>'+['J','I'].map(w=>'<div class="fr"><label for="e-inc-'+w+'">'+PEOPLE[w]+'</label><input class="num-in" type="text" inputmode="decimal" id="e-inc-'+w+'" data-k="inc.'+w+'" value="'+dr.inc[w]+'"></div>').join('')+'<div class="fr"><b>Spolu</b><b class="num">'+eur(incSum)+'</b></div></section>'+
    '<section class="card"><h3 class="eh">Limity a dátumy platieb</h3><p class="small" style="margin:0 0 6px">Pri položke zapnite „Dátum platby“, ak sa platí v pevný deň. Zobrazí sa potom medzi nastávajúcimi platbami.</p>'+limRows+'</section>'+
-   ''+'</div>'+
+   '<section class="card"><h3 class="eh">Pridať z výdavkov</h3><p class="small" style="margin:0 0 6px">Vyberte položky zo zoznamu výdavkov, ktoré sa majú v tomto mesiaci sledovať.</p>'+pick+'</section></div>'+
    '<div class="ed-foot"><button type="button" class="btn" data-act="edSave">Uložiť mesiac</button></div>';
   ed.querySelector('.ed-body').scrollTop=st;
 }
@@ -575,6 +654,10 @@ document.addEventListener('click',e=>{
   else if(a==='disconnect'){if(confirmDisc){store.del('rr_code');store.del('rr_me');resetState();confirmDisc=false;gateView();}else{confirmDisc=true;el.textContent='Naozaj odpojiť? Klepnite znova';}}
   else if(a==='edClose'){E=null;$('editor').hidden=true;}
   else if(a==='edSave'){saveEditor();}
+  else if(a==='itemOpen'){S.itemOpen=S.itemOpen===el.dataset.key?null:el.dataset.key;render(true);}
+  else if(a==='itemSave'){saveItem();}
+  else if(a==='itemOn'){E.draft.lim[el.dataset.key]=null;renderEditor(true);}
+  else if(a==='itemOff'){delete E.draft.lim[el.dataset.key];delete E.draft.dates[el.dataset.key];renderEditor(true);}
   else if(a==='dateToggle'){const k=el.dataset.key,dd=E.draft.dates;if(dd[k]===undefined)dd[k]=1;else delete dd[k];renderEditor(true);}
 });
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet();});
@@ -648,7 +731,7 @@ function gateView(msg){
   };
 }
 function resetState(){
-  S.months=[];S.tx=[];S.incTx=[];S.debts=[];S.loaded=false;S.sig=null;S.month=0;S.tab='home';S.code=null;
+  S.months=[];S.tx=[];S.incTx=[];S.debts=[];S.items={};S.itemOpen=null;S.loaded=false;S.sig=null;S.month=0;S.tab='home';S.code=null;
   $('sheet').hidden=true;$('editor').hidden=true;
 }
 async function boot(){
@@ -665,7 +748,7 @@ async function boot(){
   }
 }
 async function poll(){
-  if(document.hidden||!S.loaded||S.busy>0||!$('sheet').hidden||!$('editor').hidden)return;
+  if(document.hidden||!S.loaded||S.busy>0||S.itemOpen||!$('sheet').hidden||!$('editor').hidden)return;
   try{const r=await loadAll();if(r==='ok')render(true);}catch(e){console.error(e);}
 }
 setInterval(poll,15000);
