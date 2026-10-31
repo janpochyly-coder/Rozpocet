@@ -15,6 +15,18 @@ $fn = (string)($_GET['fn'] ?? '');
 
 const WHO = ['J', 'I'];
 
+// Počiatočné dlhy novej domácnosti. Dajú sa prepísať v api/config.php cez 'seed_debts'.
+const DEFAULT_DEBTS = [
+    ['sub' => 'rodicia', 'name' => 'Rodičia', 'balance' => 7000],
+    ['sub' => 'blazka', 'name' => 'Blažka', 'balance' => 750],
+    ['sub' => 'brano', 'name' => 'Braňo', 'balance' => 1500],
+    ['sub' => 'h1', 'name' => 'Harmanec 1', 'balance' => 1800],
+    ['sub' => 'h2', 'name' => 'Harmanec 2', 'balance' => 300],
+    ['sub' => 'realbyt', 'name' => 'Realbyt', 'balance' => 2000],
+    ['sub' => 'orange', 'name' => 'Orange', 'balance' => 200],
+    ['sub' => 'vszp', 'name' => 'VšZP', 'balance' => 300],
+];
+
 function client_ip(): string { return substr((string)($_SERVER['REMOTE_ADDR'] ?? '0'), 0, 64); }
 
 // Jednoduché obmedzenie počtu pokusov z jednej adresy.
@@ -68,7 +80,8 @@ $FN['create_household'] = function (array $a) {
     try {
         q('INSERT INTO households (id, access_code) VALUES (?,?)', [$id, $code]);
         $today = gmdate('Y-m-d');
-        foreach ((array)(cfg()['seed_debts'] ?? []) as $d) {
+        $seed = (array)(cfg()['seed_debts'] ?? []);
+        foreach ($seed ?: DEFAULT_DEBTS as $d) {
             if (!isset($d['sub'], $d['name'], $d['balance'])) { continue; }
             q('INSERT INTO debts (household_id, sub, name, balance, as_of) VALUES (?,?,?,?,?)', [$id, txt($d['sub'], 32), txt($d['name'], 100), (float)$d['balance'], $today]);
         }

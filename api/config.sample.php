@@ -9,6 +9,6 @@ return [
     'user'   => 'pouzivatel',
     'pass'   => 'heslo',
     // 'path' => '/cesta/k/budget.sqlite',   // len pre driver 'sqlite'
-    // Voliteľné: počiatočné dlhy pre novú domácnosť, [{"sub":"id","name":"Názov","balance":1000}, ...]
+    // Voliteľné: vlastné počiatočné dlhy pre novú domácnosť (inak sa použijú predvolené z api/index.php)
     'seed_debts' => [],
 ];
