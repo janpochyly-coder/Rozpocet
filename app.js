@@ -121,7 +121,7 @@ const DEFPLAN=[
  {d:20,name:'Podnikanie – VšZP',key:'pod.vszp',amt:120},{d:22,name:'Podnikanie – Rozvoj',key:'pod.rozvoj',amt:50}
 ];
 const S={
-  tab:'home', openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
+  tab:'home', ptab:'mes', openPCat:{}, openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
   months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
 };
 
@@ -594,21 +594,21 @@ function _delivOld(){
 function nextMonthOf(){const l=S.months[S.months.length-1];return {y:l.mo===11?l.y+1:l.y,mo:(l.mo+1)%12};}
 function householdBlock(){
   const link=location.origin+location.pathname+'#k='+(S.code||'');
-  return '<div class="blk"><h3>Zdieľanie a zariadenie</h3><section class="card"><div class="row-between"><span>Na tomto zariadení som</span><div class="whoseg" style="min-width:150px">'+['J','I'].map(w=>'<button type="button" data-act="meSet" data-w="'+w+'" aria-pressed="'+(S.me===w)+'">'+dot(w,true)+PEOPLE[w]+'</button>').join('')+'</div></div>'+
-   '<p class="small" style="margin:14px 0 6px">Na ďalšom zariadení otvorte tento odkaz alebo zadajte kód. Kto ho má, vidí a upravuje rozpočet, preto ho nezdieľajte nikde inde.</p>'+
+  return '<section class="card dev"><h3>Toto zariadenie</h3><div class="row-between"><span>Na tomto zariadení som</span><div class="whoseg" style="min-width:150px">'+['J','I'].map(w=>'<button type="button" data-act="meSet" data-w="'+w+'" aria-pressed="'+(S.me===w)+'">'+dot(w,true)+PEOPLE[w]+'</button>').join('')+'</div></div></section>'+
+   '<section class="card dev"><h3>Pripojenie ďalšieho zariadenia</h3><p class="small" style="margin:0 0 10px">Na ďalšom zariadení otvorte tento odkaz alebo zadajte kód. Kto ho má, vidí a upravuje rozpočet, preto ho nezdieľajte nikde inde.</p>'+
    '<div class="code">'+esc((S.code||'').replace(/(.{4})/g,'$1 ').trim())+'</div>'+
-   '<button class="btn ghost" style="width:100%;margin-top:12px" data-act="copyLink" data-v="'+esc(link)+'">Skopírovať odkaz</button>'+
-   '<button class="btn ghost" style="width:100%;margin-top:8px" data-act="copyCode" data-v="'+esc(S.code||'')+'">Skopírovať kód</button>'+
-   '<button class="link" data-act="disconnect">Odpojiť toto zariadenie</button></section></div>';
+   '<div class="btns" style="margin-top:12px"><button class="btn ghost" data-act="copyLink" data-v="'+esc(link)+'">Skopírovať odkaz</button><button class="btn ghost" data-act="copyCode" data-v="'+esc(S.code||'')+'">Skopírovať kód</button></div>'+
+   '<button class="link" data-act="disconnect">Odpojiť toto zariadenie</button></section>';
 }
 function itemsBlock(){
   const its=itemList(),byG={};
   its.forEach(it=>{const g=grpOfKey(it.key);(byG[g]=byG[g]||[]).push(it);});
   const groups=DGRP.filter(g=>byG[g.id]).map(g=>{
-    const rows=byG[g.id].map(it=>{
-      const c=it.cat,v=itemStav(it),open=S.itemOpen===it.key;
+    const list=byG[g.id],tracked=list.filter(it=>itemStav(it).tracked).length,open=!!S.openPCat[g.id];
+    const rows=open?list.map(it=>{
+      const c=it.cat,v=itemStav(it),op=S.itemOpen===it.key;
       let panel='';
-      if(open){
+      if(op){
         if(it.debt)panel='<div class="ip"><p class="small" style="margin:0">Zostatok dlhu '+eur(v.value)+'. Každá splátka, ktorú pridáte, ho zníži automaticky.</p></div>';
         else{
           const x=S.items[it.key]||{stav:null,auto:false};
@@ -618,11 +618,11 @@ function itemsBlock(){
             '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button></div></div>';
         }
       }
-      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'">'+gIco(it.key,16)+'<span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
-    }).join('');
-    return '<div class="ig"><div class="ig-h">'+g.name+'</div>'+rows+'</div>';
+      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+op+'">'+gIco(it.key,16)+'<span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
+    }).join(''):'';
+    return '<div class="pc g-'+g.id+'"><button type="button" class="pc-h" data-act="pcat" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi">'+ic(GICON[g.id],18)+'</span><span class="pc-n"><b>'+g.name+'</b><small>'+list.length+(list.length===1?' položka':list.length<5?' položky':' položiek')+(tracked?' · '+tracked+' so stavom':'')+'</small></span></button>'+(open?'<div class="pc-b">'+rows+'</div>':'')+'</div>';
   }).join('');
-  return '<div class="blk"><h3>Výdavky <span class="small">'+its.length+' položiek</span></h3><section class="card"><p class="small" style="margin:0 0 6px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore (Pridať z výdavkov).</p>'+groups+'</section></div>';
+  return '<section class="card"><p class="small" style="margin:0 0 8px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore mesiaca.</p>'+groups+'</section>';
 }
 async function saveItem(){
   const key=S.itemOpen;if(!key)return;
@@ -638,20 +638,39 @@ async function saveItem(){
   }catch(err){console.error(err);toast('Položku sa nepodarilo uložiť',true);}
   finally{S.busy--;}
 }
+const PSLUG={mes:'mesiace',vyd:'vydavky',zar:'zariadenie'};
+function monthCard(i,kind){
+  const M=M_(i),sp=total(i),b=budget(i),lims=grpLims(i),tl=sum(Object.values(lims))||1,next=S.months[i+1]&&S.months[i+1].status==='planned'?i+1:-1;
+  const pill=kind==='active'?'<span class="pill ok">'+ic('check',14)+'Aktívny</span>':kind==='planned'?'<span class="pill warn">Plánovaný</span>':'<span class="pill">Uzavretý</span>';
+  const stack='<div class="mc-stack" title="Rozdelenie rozpočtu">'+DGRP.filter(g=>lims[g.id]>0).map(g=>'<i style="flex:'+lims[g.id]+';background:'+GCOL[g.id]+'"></i>').join('')+'</div>';
+  const st=kind==='planned'?'':status(sp,b);
+  const stats='<div class="mc-st"><div><span>Príjem</span><b class="num">'+eur(kind==='planned'?incExp(i):income(i))+'</b></div><div><span>Rozpočet</span><b class="num">'+eur(b)+'</b></div>'+(kind==='planned'?'':'<div><span>Minuté</span><b class="num">'+eur(sp)+'</b></div>')+'</div>';
+  let btns;
+  if(kind==='active'){
+    btns='<button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť mesiac</button>'+(next>=0?'<button class="btn sm" data-act="askSwitch">Prepnúť na '+mname(next)+'</button>':'');
+  } else if(kind==='planned'){
+    btns='<button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť mesiac</button>';
+  } else btns='<button class="btn ghost sm" data-act="viewM" data-m="'+i+'">Zobraziť</button><button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť</button>';
+  const conf=kind==='active'&&S.confirm&&next>=0?'<div class="confirm"><p style="margin:0 0 10px"><b>Ukončiť '+mname(i)+' a aktivovať '+mname(next)+'?</b><br><span class="small">'+mname(i)+' sa presunie do histórie. Dá sa naďalej otvoriť aj upraviť.</span></p><div class="btns"><button class="btn sm" data-act="doSwitch">Áno, prepnúť</button><button class="btn sm ghost" data-act="cancelSwitch">Zrušiť</button></div></div>':'';
+  const hint=kind==='active'&&next<0?'<p class="note" style="margin:10px 0 0">Na prepnutie najprv pridajte nasledujúci mesiac.</p>':'';
+  return '<div class="mc mc-'+kind+'"><div class="mc-h"><div><b class="mc-n">'+mname(i)+' '+M.y+'</b></div>'+pill+'</div>'+stats+
+   (kind==='planned'?'':'<div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,b)+'%"></div></div>')+stack+'<div class="btns">'+btns+'</div>'+conf+hint+'</div>';
+}
 function viewPlan(){
   const act=S.months.findIndex(x=>x.status==='active');
   const planned=S.months.map((x,i)=>i).filter(i=>S.months[i].status==='planned');
   const closed=S.months.map((x,i)=>i).filter(i=>S.months[i].status==='closed').reverse();
-  const nx=nextMonthOf();
-  let actHtml='';
-  if(act>=0){
-    const next=S.months[act+1]&&S.months[act+1].status==='planned'?act+1:-1;
-    const conf=S.confirm&&next>=0?'<div class="confirm"><p style="margin:0 0 10px"><b>Ukončiť '+mname(act)+' a aktivovať '+mname(next)+'?</b><br><span class="small">'+mname(act)+' sa presunie do histórie. Dá sa naďalej otvoriť aj upraviť.</span></p><div class="btns"><button class="btn sm" data-act="doSwitch">Áno, prepnúť</button><button class="btn sm ghost" data-act="cancelSwitch">Zrušiť</button></div></div>':'';
-    actHtml='<div class="blk"><h3>Aktívny mesiac</h3><section class="card"><div class="row-between"><div><div class="mt">'+mname(act)+' '+M_(act).y+'</div><div class="small">Aktívny, kým ho neprepnete.</div></div><span class="pill ok">'+ic('check',14)+'Aktívny</span></div><div class="row-between small" style="margin-top:12px"><span>Minuté <b class="num">'+eur(total(act))+'</b></span><span class="num">z '+eur(budget(act))+'</span></div><div class="btns" style="margin-top:12px"><button class="btn ghost sm" data-act="editM" data-m="'+act+'">Upraviť</button>'+(next>=0?'<button class="btn sm" data-act="askSwitch">Prepnúť na '+mname(next)+'</button>':'')+'</div>'+(next<0?'<p class="note" style="margin-top:10px">Na prepnutie najprv pridajte nasledujúci mesiac.</p>':'')+conf+'</section></div>';
-  }
-  const plHtml='<div class="blk"><h3>Plánované mesiace</h3><section class="card">'+(planned.length?'<div class="list">'+planned.map(i=>'<div class="li"><div class="t"><b>'+mname(i)+' '+M_(i).y+'</b><span class="num">rozpočet '+eur(budget(i))+' · príjem '+eur(incExp(i))+'</span></div><button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť</button></div>').join('')+'</div>':'<p class="empty">Zatiaľ žiadny plánovaný mesiac.</p>')+'<button class="btn" style="width:100%;margin-top:12px" data-act="newM">Pridať mesiac '+MN12[nx.mo].toLowerCase()+' '+nx.y+'</button></section></div>';
-  const hiHtml='<div class="blk"><h3>História</h3><section class="card">'+(closed.length?'<div class="list">'+closed.map(i=>{const sp=total(i),rest=income(i)-sp;return '<div class="li col"><div class="t"><b>'+mname(i)+' '+M_(i).y+'</b><span class="num">minuté '+eur(sp)+' · zostalo '+eur(rest)+'</span></div><div class="btns"><button class="btn ghost sm" data-act="viewM" data-m="'+i+'">Zobraziť</button><button class="btn ghost sm" data-act="editM" data-m="'+i+'">Upraviť</button></div></div>';}).join('')+'</div>':'<p class="empty">Zatiaľ žiadny uzavretý mesiac.</p>')+'</section></div>';
-  return '<div class="sh"><h1>Plán</h1></div>'+actHtml+plHtml+itemsBlock()+hiHtml+householdBlock();
+  const nx=nextMonthOf(),pt=PSLUG[S.ptab]?S.ptab:'mes';
+  const tabs='<div class="seg full" role="group" aria-label="Plán">'+[['mes','Mesiace'],['vyd','Výdavky'],['zar','Zariadenie']].map(x=>'<button data-act="ptab" data-v="'+x[0]+'" aria-pressed="'+(pt===x[0])+'">'+x[1]+'</button>').join('')+'</div>';
+  let body='';
+  if(pt==='mes'){
+    const addCard='<button class="mc mc-add" data-act="newM"><span class="mc-plus">'+ic('plus',22)+'</span><b>Pridať mesiac</b><span class="small">'+MN12[nx.mo]+' '+nx.y+'</span></button>';
+    body=(act>=0?'<div class="blk"><h3>Aktívny mesiac</h3>'+monthCard(act,'active')+'</div>':'')+
+     '<div class="blk"><h3>Nasledujúce mesiace</h3><div class="mgrid">'+planned.map(i=>monthCard(i,'planned')).join('')+addCard+'</div></div>'+
+     '<div class="blk"><h3>História</h3>'+(closed.length?'<div class="mgrid">'+closed.map(i=>monthCard(i,'closed')).join('')+'</div>':'<section class="card"><p class="empty">Zatiaľ žiadny uzavretý mesiac.</p></section>')+'</div>';
+  } else if(pt==='vyd') body='<div class="blk"><h3>Výdavky <span class="small">'+itemList().length+' položiek</span></h3>'+itemsBlock()+'</div>';
+  else body='<div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
+  return '<div class="sh"><h1>Plán</h1></div>'+tabs+'<div class="plan2">'+body+'</div>';
 }
 
 /* ---------- editor mesiaca ---------- */
@@ -720,18 +739,18 @@ function renderEditor(keep){
     }
   });
   const groups=DGRP.map(g=>{
-    const es=entries.filter(e=>grpOfKey(e.key)===g.id);if(!es.length)return '';
-    return '<section class="card eg2"><div class="eg2-h"><h3>'+g.name+'</h3><b class="num" data-sum="g.'+g.id+'">'+eur(m.g[g.id]||0)+'</b></div>'+es.map(e=>e.html).join('')+'</section>';
+    const es=entries.filter(e=>grpOfKey(e.key)===g.id),av=itemList().filter(it=>grpOfKey(it.key)===g.id&&!inLim(it.key));
+    if(!es.length&&!av.length)return '';
+    const add=av.length?'<div class="eg-add"><span class="small">Pridať do mesiaca</span><div class="subchips">'+av.map(it=>{const c=it.cat,sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div></div>':'';
+    return '<section class="card eg2 g-'+g.id+'"><div class="eg2-h"><span class="ico gi">'+ic(GICON[g.id],18)+'</span><h3>'+g.name+'</h3><b class="num" data-sum="g.'+g.id+'">'+eur(m.g[g.id]||0)+'</b></div>'+(es.length?es.map(e=>e.html).join(''):'<p class="small" style="margin:6px 0">Zatiaľ bez položiek v tomto mesiaci.</p>')+add+'</section>';
   }).join('');
-  const avail=itemList().filter(it=>!inLim(it.key));
-  const pick=avail.length?DGRP.filter(g=>avail.some(it=>grpOfKey(it.key)===g.id)).map(g=>'<div class="gl">'+g.name+'</div><div class="subchips">'+avail.filter(it=>grpOfKey(it.key)===g.id).map(it=>{const c=it.cat,sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div>').join(''):'<p class="empty">Všetky výdavky už v mesiaci sú.</p>';
   const d=m.inc-m.tot;
   ed.innerHTML='<div class="ed-head"><button type="button" class="x" data-act="edClose" aria-label="Zavrieť">'+ic('x',18)+'</button><h2>'+(E.mode==='new'?'Nový mesiac':'Upraviť mesiac')+' · '+MN12[E.mo]+' '+E.y+'</h2></div>'+
    '<div class="ed-sum"><div><span>Príjem</span><b data-sum="inc">'+eur(m.inc)+'</b></div><div><span>Rozpočet spolu</span><b data-sum="tot">'+eur(m.tot)+'</b></div><div class="ed-diff '+(d>=0?'ok':'bad')+'" data-sum="diff">'+(d>=0?'Zostáva ':'Nad príjem o ')+eur(Math.abs(d))+'</div></div>'+
    '<div class="ed-body">'+(E.mode==='new'?'<p class="small" style="margin:0">Predvyplnené podľa naposledy pridaného mesiaca. Upravte, čo treba, a uložte.</p>':'')+
-   '<section class="card eg2"><div class="eg2-h"><h3>Očakávaný príjem</h3><b class="num" data-sum="inc">'+eur(m.inc)+'</b></div>'+['J','I'].map(w=>'<div class="er er-inc"><div class="er-n">'+PEOPLE[w]+'</div><div class="er-l"><input class="num-in" type="text" inputmode="decimal" id="e-inc-'+w+'" data-k="inc.'+w+'" value="'+dr.inc[w]+'" aria-label="Príjem '+esc(PEOPLE[w])+'"><span>€</span></div></div>').join('')+'</section>'+
+   '<section class="card eg2 g-inc"><div class="eg2-h"><span class="ico gi">'+ic('cash',18)+'</span><h3>Očakávaný príjem</h3><b class="num" data-sum="inc">'+eur(m.inc)+'</b></div>'+['J','I'].map(w=>'<div class="er er-inc"><div class="er-n">'+dot(w,true)+'<span class="ern-t">'+PEOPLE[w]+'</span></div><div class="er-l"><input class="num-in" type="text" inputmode="decimal" id="e-inc-'+w+'" data-k="inc.'+w+'" value="'+dr.inc[w]+'" aria-label="Príjem '+esc(PEOPLE[w])+'"><span>€</span></div></div>').join('')+'</section>'+
    '<p class="small ed-note">Pri každej položke nastavte limit. Zapnite „Platba v pevný deň“, ak sa platí v konkrétny deň. Zobrazí sa potom medzi nastávajúcimi platbami.</p>'+head+groups+
-   '<section class="card eg2"><div class="eg2-h"><h3>Pridať z výdavkov</h3></div><p class="small ed-note">Vyberte položky zo zoznamu výdavkov, ktoré sa majú v tomto mesiaci sledovať.</p>'+pick+'</section></div>'+
+   '</div>'+
    '<div class="ed-foot"><button type="button" class="btn" data-act="edSave">Uložiť mesiac</button></div>';
   ed.querySelector('.ed-body').scrollTop=st;
 }
@@ -787,7 +806,7 @@ function copyText(t){
 const TSLUG={home:'prehlad',bud:'rozpocet',ana:'analytika',plan:'plan'};
 const GSLUG={des:'desiatky',byv:'byvanie',kon:'konzum',pra:'pravidelne',odk:'odkladanie',dlh:'dlhy',mim:'mimoriadne'};
 let hashInit=false;
-function hashOf(){let h=TSLUG[S.tab]||'prehlad';if(S.tab==='bud'&&GSLUG[S.grp])h+='/'+GSLUG[S.grp];if(S.tab==='ana'&&S.anaTab==='rep')h+='/report';return h;}
+function hashOf(){let h=TSLUG[S.tab]||'prehlad';if(S.tab==='bud'&&GSLUG[S.grp])h+='/'+GSLUG[S.grp];if(S.tab==='ana'&&S.anaTab==='rep')h+='/report';if(S.tab==='plan'&&PSLUG[S.ptab]&&S.ptab!=='mes')h+='/'+PSLUG[S.ptab];return h;}
 function syncHash(){
   const h='#'+hashOf();if(location.hash===h){hashInit=true;return;}
   try{history[hashInit?'pushState':'replaceState'](null,'',location.pathname+location.search+h);}catch(e){}
@@ -800,6 +819,7 @@ function applyHash(){
   S.tab=t;
   if(t==='bud')S.grp=Object.keys(GSLUG).find(k=>GSLUG[k]===p[1])||'all';
   if(t==='ana')S.anaTab=p[1]==='report'?'rep':'ana';
+  if(t==='plan')S.ptab=Object.keys(PSLUG).find(k=>PSLUG[k]===p[1])||'mes';
   return true;
 }
 function onHash(){if(S.loaded&&applyHash()){S.confirm=false;render();}}
@@ -866,6 +886,8 @@ document.addEventListener('click',e=>{
   else if(a==='rep'){S.rep[el.dataset.w]=!S.rep[el.dataset.w];render(true);}
   else if(a==='upAll'){S.upAll=!S.upAll;render(true);}
   else if(a==='doneAll'){S.doneAll=!S.doneAll;render(true);}
+  else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
+  else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
   else if(a==='catTog'){S.openCats[el.dataset.c]=!S.openCats[el.dataset.c];render(true);}
   else if(a==='dsort'){S.doneSort=el.dataset.v;S.doneN=5;render(true);}
