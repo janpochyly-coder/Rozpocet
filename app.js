@@ -282,17 +282,57 @@ function doneBlock(m){
   const all=S.tx.filter(t=>t.dt>=a&&t.dt<=b).sort(byDateDesc), shown=S.doneAll?all:all.slice(0,4);
   return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(a)+' – '+fd(b)+'</span></h3><section class="card">'+(all.length?txRows(shown)+(all.length>4?'<button class="link" data-act="doneAll" aria-expanded="'+S.doneAll+'">'+(S.doneAll?'Zobraziť menej':'Zobraziť všetkých '+all.length)+'</button>':''):'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+'<p class="note" style="margin-top:10px">Mesiac sa na začiatku a na konci dopĺňa na celé týždne.</p></section></div>';
 }
+function monthLeaves(m){
+  const M=M_(m),ss=bySub(m),cc=byCat(m),out=[],inc=income(m);
+  CATS.forEach(c=>{
+    if(c.kind==='manual'){if(cc[c.id]>0)out.push({key:c.id,c:c,name:c.name,sub:'mimo plánu',limit:0,spent:cc[c.id],day:null,pre:{cat:c.id,sub:''}});return;}
+    if(c.kind==='tithe'){out.push({key:'des',c:c,name:c.name,sub:'10 % z príjmu',limit:inc*.1,spent:cc[c.id],day:payDayOf(m,'des'),pre:{cat:c.id,sub:''}});return;}
+    if(c.subs.length){
+      c.subs.forEach((x,k)=>{
+        const key=c.id+'.'+x.id,l=getLim(m,key),sp=ss[key]||0;
+        if(!isIn(m,key)&&!sp)return;
+        const w=c.kind==='weeks'?weekInfo(m,k):null;
+        out.push({key:key,c:c,name:w?'Jedlo · týždeň '+w.n:x.name,sub:w?w.range:c.name,limit:l||0,spent:sp,day:c.kind==='weeks'?null:payDayOf(m,key),pre:{cat:c.id,sub:c.kind==='weeks'?'':x.id}});
+      });
+    } else {
+      const l=getLim(m,c.id),sp=cc[c.id]||0;
+      if(!isIn(m,c.id)&&!sp)return;
+      out.push({key:c.id,c:c,name:c.name,sub:'',limit:l||0,spent:sp,day:payDayOf(m,c.id),pre:{cat:c.id,sub:''}});
+    }
+  });
+  return out;
+}
+function plannedRow(it,M,m){
+  const cd=curDay(M),active=M.status==='active',rest=Math.max(0,it.limit-it.spent),paid=it.limit>0&&rest<.5;
+  let st;
+  if(paid)st=pill({k:'ok',t:'Uhradené',i:'check'});
+  else if(it.spent>0)st=pill({k:'warn',t:'Zaplatené '+eur(it.spent),i:'alert'});
+  else if(!active)st=pill({k:'warn',t:'Neuhradené',i:'alert'});
+  else if(it.day<cd)st=pill({k:'bad',t:'Po termíne',i:'over'});
+  else st=pill({k:'ok',t:it.day===cd?'Dnes':relDay(it.day-cd),i:'check'});
+  const pre=Object.assign({amt:rest,note:it.name},it.pre);
+  return '<div class="pr'+(paid?' done':'')+'"><div class="pr-d num">'+it.day+'.</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.limit)+'</b>'+st+'</div>'+(paid?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">Uhradiť</button>')+'</div>';
+}
+function budgetRow(it){
+  const st=it.limit>0?status(it.spent,it.limit):{k:'ok'},left=it.limit-it.spent;
+  const info=it.limit>0?(left>=0?'zostáva '+eur(left):'prekročené o '+eur(-left)):'bez limitu';
+  return '<div class="br"><div class="br-h"><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'</b><span class="small num">'+(it.limit>0?'z '+eur(it.limit):'')+'</span></div><button class="padd" data-act="addFor" data-key="'+it.key+'">Pridať</button></div>'+
+   (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+'<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
+}
 function viewHome(){
-  const m=S.month, spent=total(m), bud=budget(m), left=bud-spent, open=M_(m).status==='active', inc=income(m), rec=received(m), bal=inc-spent;
-  const st=open?'':'<div style="margin-top:12px">'+pill(left>=0?{k:'ok',t:'Pod rozpočtom',i:'check'}:{k:'bad',t:'Nad rozpočtom',i:'over'})+'</div>';
-  return head('Prehľad')+
-  '<section class="card hero"><div class="lbl">Minuté · '+mname(m)+'</div><div class="big num">'+eur(spent)+'</div>'+
-  '<div class="track" role="img" aria-label="Minuté '+eur(spent)+' z '+eur(bud)+'"><div class="fill'+(spent>bud?' bad':'')+'" style="width:'+pctOf(spent,bud)+'%"></div></div>'+
-  '<div class="row-between small" style="margin-top:8px"><span class="num">z '+eur(bud)+' potreby</span><span class="num">'+(left>=0?'zostáva <b>'+eur(left)+'</b>':'nad o <b>'+eur(-left)+'</b>')+'</span></div>'+st+
-  '<div class="hstats"><div><span>Príjem</span><b class="num">'+eur(inc)+'</b><small>'+(open&&rec<inc?'prijaté '+eur(rec):'')+'</small></div>'+
-  '<div><span>Potreba</span><b class="num">'+eur(bud)+'</b><small>'+(left>0?'ešte '+eur(left):'splnená')+'</small></div>'+
-  '<div class="'+(bal>=0?'ok':'bad')+'"><span>Zostatok</span><b class="num">'+eur(bal)+'</b><small>po splnení potreby '+eur(inc-bud)+'</small></div></div></section>'+
-  upcomingBlock(m)+gradualBlock(m)+doneBlock(m);
+  const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
+  const rest=sum(lv.map(x=>Math.max(0,x.limit-x.spent))),free=inc-spent-rest;
+  const planned=lv.filter(x=>x.day).sort((a,b)=>a.day-b.day),flex=lv.filter(x=>!x.day);
+  const paidN=planned.filter(x=>x.limit>0&&x.limit-x.spent<.5).length;
+  const hero='<section class="card hero"><div class="hstats big3">'+
+   '<div><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
+   '<div><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
+   '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
+   '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
+   '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div></section>';
+  const A='<div class="blk"><h3>Plánované platby <span class="small num">uhradené '+paidN+' z '+planned.length+'</span></h3><section class="card">'+(planned.length?planned.map(x=>plannedRow(x,M,m)).join(''):'<p class="empty">Žiadne platby s pevným dňom. Dátum zapnete v Pláne pri položke.</p>')+'</section></div>';
+  const B='<div class="blk"><h3>Mesačný budget <span class="small">kedykoľvek v mesiaci</span></h3><section class="card">'+(flex.length?flex.map(budgetRow).join(''):'<p class="empty">Žiadne položky.</p>')+'</section></div>';
+  return head('Prehľad')+hero+A+B+doneBlock(m);
 }
 
 /* ---------- rozpočet ---------- */
@@ -633,8 +673,9 @@ function renderSheet(){
   else sw.innerHTML='';
 }
 function parseAmt(){const v=parseFloat($('amt').value.replace(/\s/g,'').replace(',','.'));return isFinite(v)&&v>0?v:0;}
-function openSheet(mode){
+function openSheet(mode,pre){
   S.mode=mode||'exp';S.draft={cat:'jed',sub:'',who:S.me};$('amt').value='';$('note').value='';$('date').max=iso(TODAY);$('date').min=iso(new Date(S.months[0].y,S.months[0].mo,1));$('date').value=iso(TODAY);$('save').disabled=true;
+  if(pre){S.draft.cat=pre.cat;S.draft.sub=pre.sub||'';if(pre.amt>0){$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');$('save').disabled=false;}if(pre.note)$('note').value=pre.note;}
   renderSheet();$('sheet').hidden=false;setTimeout(()=>$('amt').focus(),30);
 }
 function closeSheet(){$('sheet').hidden=true;}
@@ -664,6 +705,7 @@ document.addEventListener('click',e=>{
   else if(a==='incAll'){S.incAll=!S.incAll;render(true);}
   else if(a==='repAll'){S.repAll=!S.repAll;render(true);}
   else if(a==='add'){openSheet('exp');}
+  else if(a==='addFor'){const it=monthLeaves(S.month).find(x=>x.key===el.dataset.key);if(it)openSheet('exp',Object.assign({amt:it.day?Math.max(0,it.limit-it.spent):0,note:it.day?it.name:''},it.pre));}
   else if(a==='addinc'){openSheet('inc');}
   else if(a==='mode'){S.mode=el.dataset.v;renderSheet();}
   else if(a==='preset'){$('note').value=el.dataset.n;}
