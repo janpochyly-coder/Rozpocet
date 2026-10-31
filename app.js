@@ -923,7 +923,7 @@ function applyLook(){
 function lookCtl(){
   const dark=effTheme()==='dark',w=isWest();
   return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
-   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Potiahni páku"><span class="wl-plate"><i class="wl-r a"></i><i class="wl-r b"></i><i class="wl-r c"></i><i class="wl-r d"></i><span class="wl-t">WESTERN</span><span class="wl-slot"><i class="wl-rod"></i><i class="wl-knob"></i></span><span class="wl-s">'+(w?'vypnúť':'zapnúť')+'</span></span></button>';
+   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>';
 }
 /* preklad do western slovníka (len pri zapnutom western vzhľade) */
 const WDICT={
@@ -933,10 +933,10 @@ const WDICT={
  'K dispozícii':'V pokladnici','Zostáva uhradiť':'Treba vyplatiť','Minuté':'Minuté zlato','podľa príjmov':'podľa výplat','z plánovaných výdavkov':'z hľadaných platieb','všetko uhradené':'všetko vyplatené','v tomto mesiaci':'tento mesiac',
  'Po úhradách všetkého ostane':'Po vyplatení všetkého ostane',
  'Uhradiť':'Vyplatiť','Pridať':'Zapísať','Pridať zápis':'Zapísať do knihy','Pridať výdavok':'Zapísať výdavok','Pridať príjem':'Zapísať výplatu','Nový výdavok':'Nový záznam','Nový príjem':'Nová výplata','Upraviť výdavok':'Prepísať záznam','Upraviť príjem':'Prepísať výplatu',
- 'Uložiť':'Do trezoru','Uložiť zmeny':'Zapečatiť zmeny','Uložiť mesiac':'Zapečatiť mesiac','Odstrániť':'Vyhnať z mesta','Upraviť':'Prepísať','Upraviť mesiac':'Prepísať mesiac','Zobraziť':'Pozrieť','Zrušiť':'Zrušiť',
+ 'Upraviť':'Prepísať','Upraviť mesiac':'Prepísať mesiac','Zobraziť':'Pozrieť','Zrušiť':'Zrušiť',
  'Výdavok':'Výdaj','Príjem':'Výplata','Príjmy':'Výplaty','Kto platil':'Kto vyplatil','Kto dostal':'Kto dostal','Dátum':'Dátum','Poznámka':'Poznámka','Kategória':'Skupina','Položka':'Zápis',
  'Desiatky':'Kostol','Bývanie':'Ranč','Konzum':'Obchod','Pravidelné':'Dávky','Odkladanie':'Trezor','Dlhy':'Bankár','Mimoriadne':'Divočina',
- 'Nájom':'Nájom ranča','Elektrina':'Lampový olej','Jedlo':'Fazuľa a mäso','Drogéria':'Zmiešaný tovar','Oblečenie':'Klobúky a čižmy','Nafta':'Seno pre koňa','Poistka':'Poistka koča','Servis':'Kováč','Diaľničná':'Mýto','Investovanie':'Zlatá baňa','Dovolenka':'Výlet vlakom','Výlety':'Výpravy','Oslavy':'Saloon párty','Ostatné':'Všeličo',
+
  'Najnovšie':'Čerstvé','Najstaršie':'Staré','Najvyššia suma':'Najviac zlata','Všetci':'Všetci',
  'Všetko':'Všetko','Neuhradené':'Nevyplatené','Uhradené':'Vyplatené','Podľa kategórií':'Podľa skupín','Podľa termínu':'Podľa lehoty',
  'Po termíne':'Po lehote','Do 48 hodín':'Do 48 hodín','Čaká na termín':'Čaká na lehotu','Mesačné budgety':'Mesačné zásoby','Prekročené budgety':'Prekročené zásoby',
