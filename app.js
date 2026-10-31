@@ -328,12 +328,11 @@ function itemState(it,M){
 const STL={late:['po termíne','bad'],over:['prekročené','bad'],soon:['do 48 h','orange'],wait:['čaká','mute'],flex:['v limite','mute'],paid:['uhradené','ok']};
 function itemRow(it,M){
   const left=it.limit-it.spent,stt=itemState(it,M),paid=stt==='paid',st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
-  const info=it.limit>0?(left>=0?'zostáva '+eur(left):'prekročené o '+eur(-left)):'bez limitu';
   const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
   const dcls=stt==='late'?' d-late':stt==='soon'?' d-soon':'';
-  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-n"><div class="nl"><b>'+esc(it.name)+'</b>'+(it.day?'<span class="bub '+(stt==='late'?'bad':stt==='soon'?'orange':'mute')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</div><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+(it.day?(it.sub?' · ':'')+'<span class="dtx '+(stt==='late'?'late':stt==='soon'?'soon':'')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
    (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
-   '<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
+   '</div>';
 }
 function viewHome(){
   const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
