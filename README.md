@@ -29,6 +29,16 @@ Projekt `rodinny-rozpocet`, eu-central-1. Dáta sú v schéme `budget`, ktorá n
 
 Staré tabuľky vo verejnej schéme (zostali z prvej verzie s účtami) sú uzamknuté a nepoužívajú sa. Dajú sa zmazať v dashboarde.
 
+## Adresa
+
+Aplikácia beží na `https://ucto.vrkociaren.sk/` (GitHub Pages s vlastnou doménou). DNS: záznam `CNAME` s názvom `ucto` smerujúci na `janpochyly-coder.github.io`. V repozitári Settings > Pages > Custom domain je nastavené `ucto.vrkociaren.sk`.
+
+Kód domácnosti sa v prehliadači ukladá pre každú doménu zvlášť. Na novej adrese treba raz otvoriť odkaz `https://ucto.vrkociaren.sk/#k=KÓD` alebo kód zadať.
+
+## Udržiavanie databázy aktívnej
+
+Supabase (free plán) pozastaví projekt po týždni bez aktivity. Workflow `.github/workflows/keepalive.yml` volá databázu každé 3 dni. Ak sa projekt pozastaví, beh skončí chybou a GitHub pošle e-mail.
+
 ## Nasadenie
 
 Súbory sú statické, stačí ich vystaviť na ľubovoľnom hostingu. Workflow `.github/workflows/pages.yml` ich publikuje cez GitHub Pages (Settings > Pages > Source: GitHub Actions).
