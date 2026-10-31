@@ -750,7 +750,7 @@ function viewPlan(){
      '<div class="blk"><h3>Nasledujúce mesiace</h3><div class="mgrid">'+planned.map(i=>monthCard(i,'planned')).join('')+addCard+'</div></div>'+
      '<div class="blk"><h3>História</h3>'+(closed.length?'<div class="mgrid">'+closed.map(i=>monthCard(i,'closed')).join('')+'</div>':'<section class="card"><p class="empty">Zatiaľ žiadny uzavretý mesiac.</p></section>')+'</div>';
   } else if(pt==='vyd') body='<div class="blk"><h3>Výdavky <span class="small">'+itemList().length+' položiek</span></h3>'+itemsBlock()+'</div>';
-  else body='<div class="blk"><h3>Vzhľad</h3><section class="card dev"><p class="small" style="margin:0 0 10px">Dva alternatívne dizajny: potiahnite páku (western) alebo otočte gombík (retro). Denný a nočný režim prepnete tlačidlom vpravo hore.</p><div class="lookrow">'+lookCtl()+'</div></section></div><div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
+  else body='<div class="blk"><h3>Vzhľad</h3><section class="card dev"><p class="small" style="margin:0 0 10px">Vyberte dizajn: Aa je klasický, páka western a gombík retro. Denný a nočný režim prepnete tlačidlom vpravo hore.</p><div class="lookrow">'+lookCtl()+'</div></section></div><div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
   return '<div class="sh"><h1>Plán</h1><div class="sh-r">'+themeBtn()+'</div></div>'+tabs+'<div class="plan2">'+body+'</div>';
 }
 
@@ -933,8 +933,8 @@ function applyLook(){
   const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='retro'?'#020402':(effTheme()==='dark'?'#0A1118':'#14202E'));
 }
 function lookCtl(){
-  const w=isWest(),rt=isRetro();
-  return '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+
+  const w=isWest(),rt=isRetro(),cl=!w&&!rt;
+  return '<button type="button" class="classicbtn" data-act="classicTog" role="switch" aria-checked="'+cl+'" aria-label="Klasický vzhľad" title="Klasický vzhľad"><span>Aa</span></button>'+'<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+
    '<button type="button" class="knobbtn" data-act="retroTog" role="switch" aria-checked="'+rt+'" aria-label="Retro vzhľad" title="Retro vzhľad (otoč gombík)"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><circle class="kb-tick" cx="6" cy="24" r="1"/><circle class="kb-tick" cx="26" cy="24" r="1"/><circle class="kb-tick" cx="16" cy="4.500" r="1"/><g class="kb-knob"><circle cx="16" cy="16" r="9" class="kb-body"/><path d="M16 8.500v6" class="kb-notch"/></g></svg><i class="kb-led"></i></button>';
 }
 function themeBtn(){
@@ -1010,15 +1010,19 @@ function swingDoors(cb){
 }
 let leverBusy=false;
 function toggleStyle(name,btn){
-  if(leverBusy)return;leverBusy=true;
-  const on=store.get('rr_style')!==name;
-  if(btn){btn.setAttribute('aria-checked',on);}
+  if(leverBusy)return;
+  const cur=store.get('rr_style')||'modern';
+  if(name==='modern'&&cur==='modern')return;
+  leverBusy=true;
+  const on=name==='modern'?true:cur!==name;
   swingDoors(()=>{
     store.set('rr_style',on?name:'modern');applyLook();
     unwesternize();
     renderTabs();render(true);if(on)westernize(document.body);
     if(on&&name==='retro'){const ph=document.getElementById('phone');if(ph){ph.classList.remove('crt-on');void ph.offsetWidth;ph.classList.add('crt-on');setTimeout(()=>ph.classList.remove('crt-on'),1100);}}
   });
+  const sw=btn&&btn.parentNode?[...btn.parentNode.children]:[];
+  sw.forEach(x=>{if(x.getAttribute('role')==='switch')x.setAttribute('aria-checked',(x===btn&&on&&name!=='modern')||(name==='modern'&&x.classList.contains('classicbtn')));});
   setTimeout(()=>{leverBusy=false;},1400);
 }
 function renderTabs(){
@@ -1164,6 +1168,7 @@ document.addEventListener('click',e=>{
   else if(a==='idIcon'){idSync();S.idlg.icon=S.idlg.icon===el.dataset.i?'':el.dataset.i;renderIdlg();}
   else if(a==='idDel'){if(window.confirm('Zmazať tento výdavok? Už zadané platby ostanú v histórii.'))saveItemDef(true);}
   else if(a==='themeTog'){store.set('rr_theme',effTheme()==='dark'?'light':'dark');applyLook();renderTabs();render(true);}
+  else if(a==='classicTog'){toggleStyle('modern',el);}
   else if(a==='styleTog'){toggleStyle('western',el);}
   else if(a==='retroTog'){toggleStyle('retro',el);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}

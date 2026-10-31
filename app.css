@@ -1019,3 +1019,11 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .scan video{width:min(92vw,420px);aspect-ratio:1;object-fit:cover;border-radius:12px;background:#000;border:2px solid rgba(255,255,255,.5)}
 .scan p{margin:0;max-width:420px;text-align:center;font-size:14px;opacity:.9}
 .scan .btn{background:#fff;color:#111}
+
+/* --- tlačidlo klasického vzhľadu --- */
+.classicbtn{width:46px;height:46px;border-radius:8px;flex:none;display:grid;place-items:center;padding:0;cursor:pointer;border:1.5px solid #14202E;background:#fff;color:#14202E;font-family:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;font-weight:700;font-size:18px;letter-spacing:-.02em;transition:background .3s,color .3s}
+.classicbtn span{pointer-events:none}
+.classicbtn[aria-checked="true"]{background:#14202E;color:#fff}
+.classicbtn:hover{box-shadow:0 0 0 3px rgba(20,32,46,.15)}
+.classicbtn:focus-visible{outline:2px solid #1C7C7D;outline-offset:3px}
+[data-style="retro"] .classicbtn{border-radius:0}
