@@ -970,15 +970,18 @@ function unwesternize(){
   while((n=wk.nextNode())){if(n.__o!==undefined){n.nodeValue=n.__o;n.__o=undefined;}}
 }
 new MutationObserver(ms=>{if(!isWest()||wBusy)return;for(const m of ms){if(m.type==='characterData'){westernize(m.target.parentNode);}else m.addedNodes.forEach(x=>{if(x.nodeType===1)westernize(x);else if(x.nodeType===3&&x.parentNode)westernize(x.parentNode);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});
-/* dvere saloonu: animácia prepnutia vzhľadu */
+/* jemný prechod pri prepnutí vzhľadu (prelínanie) */
 function swingDoors(cb){
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduce){cb();return;}
-  let d=document.getElementById('doors');
-  if(!d){d=document.createElement('div');d.id='doors';d.className='doors';d.setAttribute('aria-hidden','true');d.innerHTML='<div class="door l"><i></i></div><div class="door r"><i></i></div><div class="dust"></div>';document.body.appendChild(d);}
+  if(document.startViewTransition){
+    try{document.startViewTransition(()=>{cb();});return;}catch(e){}
+  }
+  let d=document.getElementById('fadeov');
+  if(!d){d=document.createElement('div');d.id='fadeov';d.setAttribute('aria-hidden','true');document.body.appendChild(d);}
   d.classList.remove('go');void d.offsetWidth;d.classList.add('go');
-  setTimeout(cb,520);
-  setTimeout(()=>{d.classList.remove('go');},1700);
+  setTimeout(cb,320);
+  setTimeout(()=>{d.classList.remove('go');},900);
 }
 let leverBusy=false;
 function toggleWestern(btn){
@@ -990,7 +993,7 @@ function toggleWestern(btn){
     if(!on)unwesternize();
     renderTabs();render(true);if(on)westernize(document.body);
   });
-  setTimeout(()=>{leverBusy=false;},1750);
+  setTimeout(()=>{leverBusy=false;},950);
 }
 function renderTabs(){
   $('tabbar').innerHTML=TABS.map(t=>t?'<button class="tab" data-act="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ic(t[2],22)+t[1]+'</button>':'<button class="fab" data-act="add" aria-label="Pridať výdavok alebo príjem">'+ic('plus',26)+'</button>').join('')+'<div class="sidectl">'+lookCtl()+'</div>';
