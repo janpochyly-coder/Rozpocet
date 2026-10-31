@@ -507,16 +507,65 @@ function insights(){
   list.push('Na splátky dlhov išlo <b>'+eur(dp)+'</b>'+(M_(m).status==='closed'?' z plánovaných '+eur(catLimit(CAT.dlh,m)):'')+'.');
   return '<ul class="ins">'+list.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
 }
+const GCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F',dlh:'#C4473D',mim:'#5B6B7A'};
+function grpSums(m){const o={};DGRP.forEach(g=>o[g.id]=0);txm(m).forEach(t=>{o[grpOfKey(txKey(t))]+=t.amt;});return o;}
+function grpLims(m){const o={};DGRP.forEach(g=>o[g.id]=0);monthLeaves(m).forEach(x=>{o[grpOfKey(x.key)]+=x.limit;});return o;}
+function stackChart(){
+  const ids=vis(),N=ids.length,sums=ids.map(grpSums),buds=ids.map(i=>sum(Object.values(grpLims(i)))),tots=sums.map(o=>sum(Object.values(o)));
+  const mx=Math.max(1,...buds,...tots),step=mx>6000?2000:mx>2500?1000:500,max=Math.ceil(mx*1.08/step)*step;
+  const W=420,H=210,l=40,r=6,t=14,b=26,pw=W-l-r,ph=H-t-b,y=v=>t+ph-v/max*ph,band=pw/N,bw=Math.min(40,band-10);
+  let g='';
+  for(let v=0;v<=max;v+=step)g+='<line class="grid" x1="'+l+'" x2="'+(W-r)+'" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="ax" x="'+(l-6)+'" y="'+(y(v)+3)+'" text-anchor="end">'+NF0.format(v)+'</text>';
+  let bars='',marks='',hits='';
+  ids.forEach((i,k)=>{
+    const bx=l+band*k+(band-bw)/2,sel=i===S.month;let acc=0;
+    DGRP.forEach(gr=>{const v=sums[k][gr.id];if(v<=0)return;const y1=y(acc+v),h=y(acc)-y1;acc+=v;bars+='<rect x="'+bx+'" y="'+y1+'" width="'+bw+'" height="'+Math.max(0,h-.6)+'" rx="2" fill="'+GCOL[gr.id]+'" opacity="'+(sel?1:.5)+'"/>';});
+    if(sel&&tots[k]>0)bars+='<text class="vlab" x="'+(bx+bw/2)+'" y="'+(y(tots[k])-5)+'" text-anchor="middle">'+eur(tots[k])+'</text>';
+    bars+='<text class="ax" x="'+(bx+bw/2)+'" y="'+(H-8)+'" text-anchor="middle" style="'+(sel?'font-weight:700;fill:var(--ink)':'')+'">'+mshort(i)+'</text>';
+    marks+='<line class="budget" x1="'+(l+band*k+3)+'" x2="'+(l+band*(k+1)-3)+'" y1="'+y(buds[k])+'" y2="'+y(buds[k])+'"/>';
+    hits+='<rect class="hit" x="'+(l+band*k)+'" y="'+t+'" width="'+band+'" height="'+ph+'" data-act="pick" data-m="'+i+'" data-tip="'+mname(i)+': '+eur(tots[k])+' z '+eur(buds[k])+(M_(i).status==='active'?' (priebežne)':'')+'"/>';
+  });
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Výdavky po mesiacoch podľa kategórií oproti rozpočtu">'+g+bars+marks+hits+'</svg>';
+}
+function donut(m){
+  const sums=grpSums(m),tot=sum(Object.values(sums));
+  if(tot<=0)return '<p class="empty">V tomto mesiaci zatiaľ žiadny výdavok.</p>';
+  const R=52,C=2*Math.PI*R;let off=0,arcs='';
+  DGRP.forEach(g=>{const v=sums[g.id];if(v<=0)return;const len=v/tot*C;arcs+='<circle r="'+R+'" cx="70" cy="70" fill="none" stroke="'+GCOL[g.id]+'" stroke-width="18" stroke-dasharray="'+Math.max(0,len-1.5)+' '+(C-Math.max(0,len-1.5))+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 70 70)"/>';off+=len;});
+  const list=DGRP.filter(g=>sums[g.id]>0).sort((a,b)=>sums[b.id]-sums[a.id]).map(g=>'<a class="dl-r g-'+g.id+'" href="#rozpocet/'+GSLUG[g.id]+'"><span class="ico gi">'+ic(GICON[g.id],16)+'</span><span class="dl-n">'+g.name+'</span><span class="num dl-v">'+eur(sums[g.id])+'</span><span class="small num dl-p">'+Math.round(sums[g.id]/tot*100)+' %</span></a>').join('');
+  return '<div class="donut-w"><svg class="donut" viewBox="0 0 140 140" role="img" aria-label="Rozdelenie výdavkov podľa kategórií">'+arcs+'<text x="70" y="66" text-anchor="middle" class="d-l">Minuté</text><text x="70" y="86" text-anchor="middle" class="d-v">'+eur(tot)+'</text></svg><div class="dl">'+list+'</div></div>';
+}
+function topItems(m){
+  const lv=monthLeaves(m).filter(x=>x.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,8),tot=total(m)||1,mx=lv[0]?lv[0].spent:1;
+  if(!lv.length)return '<p class="empty">V tomto mesiaci zatiaľ žiadny výdavok.</p>';
+  return lv.map(x=>'<div class="ti g-'+grpOfKey(x.key)+'">'+gIco(x.key)+'<div class="ti-m"><div class="ti-h"><b>'+esc(x.name)+'</b><span class="num"><b>'+eur(x.spent)+'</b> <span class="small">'+Math.round(x.spent/tot*100)+' %</span></span></div><div class="track thin"><div class="fill gfill" style="width:'+x.spent/mx*100+'%"></div></div></div></div>').join('');
+}
+function planVs(m){
+  const sums=grpSums(m),lims=grpLims(m);
+  return DGRP.filter(g=>sums[g.id]>0||lims[g.id]>0).map(g=>{
+    const sp=sums[g.id],lim=lims[g.id],d=sp-lim,st=lim>0?status(sp,lim):{k:'ok'};
+    return '<div class="pv g-'+g.id+'"><span class="ico gi">'+ic(GICON[g.id],16)+'</span><div class="pv-m"><div class="pv-h"><b>'+g.name+'</b><span class="num"><b>'+eur(sp)+'</b><span class="small"> / '+eur(lim)+'</span></span></div><div class="track thin"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div><span class="small '+(d>.5?'neg':'')+'">'+(lim<=0&&sp>0?'bez limitu':d>.5?'nad plánom o '+eur(d):'pod plánom o '+eur(-d))+'</span></div></div>';
+  }).join('')||'<p class="empty">Zatiaľ bez dát.</p>';
+}
 function viewAnalytics(){
   const tabs='<div class="seg full" role="group" aria-label="Analytika"><button data-act="anatab" data-v="ana" aria-pressed="'+(S.anaTab==='ana')+'">Grafy</button><button data-act="anatab" data-v="rep" aria-pressed="'+(S.anaTab==='rep')+'">Report</button></div>';
   if(S.anaTab==='rep') return head('Analytika')+tabs+viewReport();
-  const m=S.month,who=byWho(m),wt=who.J+who.I||1;
-  return head('Analytika')+tabs+
-  '<div class="blk"><div class="row-between" style="margin-bottom:8px"><h3 style="margin:0">Výdavky po mesiacoch</h3><div class="seg" role="group" aria-label="Zobrazenie"><button data-act="trend" data-v="chart" aria-pressed="'+(S.trend==='chart')+'">Graf</button><button data-act="trend" data-v="table" aria-pressed="'+(S.trend==='table')+'">Tabuľka</button></div></div><section class="card">'+
-  (S.trend==='chart'?'<div class="legend"><span><i class="sw" style="background:var(--bar)"></i>Výdavky</span><span><i class="sw dash"></i>Rozpočet mesiaca</span></div>'+chartMonths()+'<p class="note">Klepnutím na stĺpec vyberiete mesiac.</p>':tableMonths())+'</section></div>'+
-  '<div class="blk"><h3>Kam idú peniaze · '+mname(m)+'</h3><section class="card">'+breakdown()+'</section></div>'+
-  '<div class="blk"><h3>Kto platí · '+mname(m)+'</h3><section class="card"><div class="legend" style="margin:0"><span>'+dot('J',true)+'J <b class="num">'+eur(who.J)+'</b> · '+Math.round(who.J/wt*100)+' %</span><span>'+dot('I',true)+'I <b class="num">'+eur(who.I)+'</b> · '+Math.round(who.I/wt*100)+' %</span></div><div class="split"><i class="J" style="flex:'+who.J/wt+'"></i><i class="I" style="flex:'+who.I/wt+'"></i></div></section></div>'+
-  '<div class="blk"><h3>Čo si všimnúť</h3><section class="card">'+insights()+'</section></div>';
+  const m=S.month,who=byWho(m),wt=who.J+who.I||1,spent=total(m),bud=budget(m),pi=prevVis(m),diff=spent-bud;
+  const ids=vis(),avg=ids.length?sum(ids.map(total))/ids.length:0;
+  const kpi=(k,v,s,cls)=>'<div><span>'+k+'</span><b class="num '+(cls||'')+'">'+v+'</b><small>'+(s||'&nbsp;')+'</small></div>';
+  const hero='<section class="card bhero"><div class="kpi4">'+
+   kpi('Minuté · '+mname(m),eur(spent),pi>=0?sgn(spent-total(pi))+' voči '+mshort(pi):'')+
+   kpi('Rozpočet mesiaca',eur(bud),'príjem '+eur(income(m)))+
+   kpi(diff>0?'Nad rozpočtom':'Pod rozpočtom',eur(Math.abs(diff)),M_(m).status==='active'?'priebežne':'',diff>0?'neg':'pos')+
+   kpi('Priemer mesiaca',eur(avg),ids.length+' '+(ids.length===1?'mesiac':ids.length<5?'mesiace':'mesiacov'))+'</div></section>';
+  const trend='<div class="blk"><div class="row-between" style="margin-bottom:8px"><h3 style="margin:0">Výdavky po mesiacoch</h3><div class="seg" role="group" aria-label="Zobrazenie"><button data-act="trend" data-v="chart" aria-pressed="'+(S.trend==='chart')+'">Graf</button><button data-act="trend" data-v="table" aria-pressed="'+(S.trend==='table')+'">Tabuľka</button></div></div><section class="card">'+
+   (S.trend==='chart'?'<div class="legend sleg">'+DGRP.map(g=>'<span><i style="background:'+GCOL[g.id]+'"></i>'+g.name+'</span>').join('')+'<span><i class="sw dash"></i>Rozpočet</span></div>'+stackChart()+'<p class="note">Klepnutím na stĺpec vyberiete mesiac.</p>':tableMonths())+'</section></div>';
+  const kam='<div class="blk"><h3>Kam idú peniaze · '+mname(m)+'</h3><section class="card">'+donut(m)+'</section></div>';
+  const pv='<div class="blk"><h3>Plán a skutočnosť · '+mname(m)+'</h3><section class="card">'+planVs(m)+'</section></div>';
+  const ti='<div class="blk"><h3>Najväčšie položky · '+mname(m)+'</h3><section class="card">'+topItems(m)+'</section></div>';
+  const kto='<div class="blk"><h3>Kto platí · '+mname(m)+'</h3><section class="card"><div class="legend" style="margin:0"><span>'+dot('J',true)+'J <b class="num">'+eur(who.J)+'</b> · '+Math.round(who.J/wt*100)+' %</span><span>'+dot('I',true)+'I <b class="num">'+eur(who.I)+'</b> · '+Math.round(who.I/wt*100)+' %</span></div><div class="split"><i class="J" style="flex:'+who.J/wt+'"></i><i class="I" style="flex:'+who.I/wt+'"></i></div></section></div>';
+  const ins='<div class="blk"><h3>Čo si všimnúť</h3><section class="card">'+insights()+'</section></div>';
+  return head('Analytika')+tabs+hero+'<div class="ana2"><div class="ana-l">'+trend+pv+ins+'</div><div class="ana-r">'+kam+ti+kto+'</div></div>';
 }
 function viewReport(){
   const m=S.month;
@@ -528,11 +577,12 @@ function viewReport(){
   const sentence='V mesiaci '+mname(m).toLowerCase()+' ste minuli '+eur(spent)+', '+(diff>0?'o '+eur(diff)+' nad rozpočtom':'o '+eur(-diff)+' pod rozpočtom')+'. Z príjmov '+eur(income(m))+' vám '+(rest>=0?'zostalo '+eur(rest)+'.':'chýba '+eur(-rest)+'.');
   const lv=leaves(m).filter(x=>x.spent>x.limit+.005).sort((a,b)=>(b.spent-b.limit)-(a.spent-a.limit));
   const row=(n,pl,sk)=>{const d=sk-pl;return '<tr><td>'+n+'</td><td>'+eur(pl)+'</td><td>'+eur(sk)+'</td><td class="'+(d>.5?'bad':'ok')+'">'+sgn(d)+'</td></tr>';};
-  const gr=GRPS.map(g=>{const s=grpStats(m,CATS.filter(c=>c.grp===g[0]));return row(g[1],s.limit,s.spent);}).join('')+row('<b>Spolu</b>',bud,spent);
-  const all=S.repAll?'<div class="tscroll" style="margin-top:10px"><table><tbody>'+CATS.filter(c=>catLimit(c,m)>0||cc[c.id]>0).map(c=>row(c.name,catLimit(c,m),cc[c.id])).join('')+'</tbody></table></div>':'';
+  const sums=grpSums(m),lims=grpLims(m);
+  const gr=DGRP.filter(g=>sums[g.id]>0||lims[g.id]>0).map(g=>row(g.name,lims[g.id],sums[g.id])).join('')+row('<b>Spolu</b>',bud,spent);
+  const all=S.repAll?'<div class="tscroll" style="margin-top:10px"><table><tbody>'+monthLeaves(m).filter(x=>x.limit>0||x.spent>0).map(x=>row(esc(x.name),x.limit,x.spent)).join('')+'</tbody></table></div>':'';
   return '<section class="card"><p class="sentence">'+sentence+'</p></section>'+
   '<section class="card"><div class="kpis"><div><div class="k">Príjmy</div><div class="v num">'+eur(income(m))+'</div></div><div><div class="k">Výdavky</div><div class="v num">'+eur(spent)+'</div><div class="s num">'+(pi>=0?sgn(spent-total(pi))+' voči '+mshort(pi):'')+'</div></div><div><div class="k">Zostalo</div><div class="v num">'+eur(rest)+'</div></div></div></section>'+
-  '<div class="blk"><h3>Plnenie rozpočtu</h3><section class="card"><div class="tscroll"><table><thead><tr><th>Skupina</th><th>Plán</th><th>Skutočnosť</th><th>Rozdiel</th></tr></thead><tbody>'+gr+'</tbody></table></div><button class="link" data-act="repAll" aria-expanded="'+S.repAll+'">'+(S.repAll?'Skryť kategórie':'Zobraziť kategórie')+'</button>'+all+'</section></div>'+
+  '<div class="blk"><h3>Plnenie rozpočtu</h3><section class="card"><div class="tscroll"><table><thead><tr><th>Kategória</th><th>Plán</th><th>Skutočnosť</th><th>Rozdiel</th></tr></thead><tbody>'+gr+'</tbody></table></div><button class="link" data-act="repAll" aria-expanded="'+S.repAll+'">'+(S.repAll?'Skryť položky':'Zobraziť položky')+'</button>'+all+'</section></div>'+
   '<div class="blk"><h3>Položky nad limitom</h3><section class="card">'+(lv.length?'<div class="list">'+lv.slice(0,5).map(x=>'<div class="li"><div class="t"><b>'+esc(x.name)+'</b><span class="num">'+eur(x.spent)+' z '+eur(x.limit)+'</span></div><span class="a num" style="color:var(--bad)">+'+eur(x.spent-x.limit)+'</span></div>').join('')+'</div>':'<p class="empty">Všetky položky sú v limite.</p>')+'</section></div>'+deliv();
 }
 function deliv(){return '';}
