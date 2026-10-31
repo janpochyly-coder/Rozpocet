@@ -25,10 +25,11 @@
           <header><h2 id="stitle">Nový výdavok</h2><button type="button" class="x" data-act="close" aria-label="Zavrieť"></button></header>
           <div class="seg full" role="group" aria-label="Typ zápisu"><button type="button" id="m-exp" data-act="mode" data-v="exp">Výdavok</button><button type="button" id="m-inc" data-act="mode" data-v="inc">Príjem</button></div>
           <label class="amt" for="amt"><input id="amt" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Suma v eurách"><span>€</span></label>
+          <div id="sinfo" class="sinfo"></div>
           <div id="catwrap"><div class="sec-t" style="margin-bottom:8px">Kategória</div><div id="chips"></div></div>
           <div id="subwrap"></div>
           <div><div class="sec-t" id="wholbl" style="margin-bottom:8px">Kto platil</div><div class="whoseg" id="whoseg"></div></div>
-          <label class="fld" for="date">Dátum<input id="date" type="date"  ></label>
+          <div class="fld"><label for="date">Dátum</label><div class="dq"><input id="date" type="date"><button type="button" class="sc" data-act="dq" data-d="0">Dnes</button><button type="button" class="sc" data-act="dq" data-d="1">Včera</button></div></div>
           <label class="fld" for="note">Poznámka<input id="note" type="text" placeholder="Napr. Lidl" autocomplete="off"></label>
           <button class="btn" id="save" type="submit" disabled>Pridať výdavok</button>
         </form>

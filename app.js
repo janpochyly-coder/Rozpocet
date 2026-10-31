@@ -123,7 +123,7 @@ const DEFPLAN=[
 ];
 const S={
   tab:'home', defs:{}, idlg:null, ptab:'mes', openPCat:{}, openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
-  months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
+  months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{key:null,grp:'kon',who:'J'}, rep:{J:true,I:true}
 };
 
 /* ---------- mesiace, limity, týždne ---------- */
@@ -324,7 +324,7 @@ function gradualBlock(m){
 const DSORT=[['new','Najnovšie'],['old','Najstaršie'],['amt','Najvyššia suma']];
 function doneList(m){
   const M=M_(m),a=new Date(M.y,M.mo,1),b=new Date(M.y,M.mo,dim(M));
-  const all=txm(m).slice();
+  const all=txm(m).filter(t=>!S.doneWho||S.doneWho==='all'||t.who===S.doneWho);
   const cmp={new:byDateDesc,old:(x,y)=>x.dt-y.dt||x.id-y.id,amt:(x,y)=>y.amt-x.amt||byDateDesc(x,y)}[S.doneSort||'new'];
   all.sort(cmp);
   return {a:a,b:b,all:all,shown:all.slice(0,S.doneN||5)};
@@ -332,6 +332,7 @@ function doneList(m){
 function doneBlock(m){
   const d=doneList(m),sort=S.doneSort||'new';
   return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(d.a)+' – '+fd(d.b)+'</span></h3><section class="card">'+
+   '<div class="subchips dsort" role="group" aria-label="Kto platil">'+[['all','Všetci'],['J','J'],['I','I']].map(x=>'<button type="button" class="sc" data-act="dwho" data-v="'+x[0]+'" aria-pressed="'+((S.doneWho||'all')===x[0])+'">'+(x[0]==='all'?x[1]:dot(x[0],true)+x[1])+'</button>').join('')+'</div>'+
    '<div class="subchips dsort" role="group" aria-label="Zoradenie">'+DSORT.map(x=>'<button type="button" class="sc" data-act="dsort" data-v="'+x[0]+'" aria-pressed="'+(sort===x[0])+'">'+x[1]+'</button>').join('')+'</div>'+
    (d.all.length?'<div class="donelist" id="donelist" tabindex="0" aria-label="Vykonané platby">'+txRows(d.shown)+'<p class="note dmore" id="dmore">'+(d.shown.length<d.all.length?'Rolovaním zobrazíte ďalšie ('+(d.all.length-d.shown.length)+')':'To je všetko ('+d.all.length+')')+'</p></div>':'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+
    '</section></div>';
@@ -371,35 +372,52 @@ function itemState(it,M){
   return 'flex';
 }
 const STL={late:['po termíne','bad'],over:['prekročené','bad'],soon:['do 48 h','orange'],wait:['čaká','mute'],flex:['v limite','mute'],paid:['uhradené','ok']};
-function itemRow(it,M){
+function itemRow(it,M,show){
   const left=it.limit-it.spent,stt=itemState(it,M),paid=stt==='paid',st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
   const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
-  const dcls=stt==='late'?' d-late':stt==='soon'?' d-soon':'';
-  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top">'+gIco(it.key)+'<div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+(it.day?(it.sub?' · ':'')+'<span class="dtx '+(stt==='late'?'late':stt==='soon'?'soon':'')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
-   (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
-   '</div>';
+  const dcls=stt==='late'?' late':stt==='soon'?' soon':'';
+  const sub=[show==='cat'?'':it.c.name!==it.name&&it.sub?it.sub:'',it.day?'<span class="dtx'+dcls+'">'+it.day+'. '+(M.mo+1)+'.</span>':''].filter(Boolean);
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top">'+gIco(it.key)+'<div class="pr-n"><b>'+esc(it.name)+'</b><span>'+(sub.length?sub.join(' · '):'&nbsp;')+'</span></div>'+
+   '<div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small">'+(it.limit>0?' / '+eur(it.limit):'')+'</span></b>'+(it.limit>0?'<div class="track thin mini" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+'</div>'+btn+'</div></div>';
 }
 function viewHome(){
   const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
   const rest=sum(lv.map(x=>Math.max(0,x.limit-x.spent))),free=inc-spent-rest;
-  const withDay=lv.filter(x=>x.day).sort((a,b)=>a.day-b.day),noDay=lv.filter(x=>!x.day),all=withDay.concat(noDay);
-  const paidN=all.filter(x=>x.limit>0&&x.limit-x.spent<.5).length;
+  const st0=lv.map(x=>({x:x,s:itemState(x,M)})),paidN=st0.filter(o=>o.s==='paid').length;
+  const nextUp=st0.filter(o=>o.x.day&&(o.s==='late'||o.s==='soon'||o.s==='wait')).sort((a,b)=>(a.s==='late'?0:1)-(b.s==='late'?0:1)||a.x.day-b.x.day).slice(0,4);
+  const nextHtml=nextUp.length&&M.status!=='planned'?'<div class="nextup"><span class="small">Najbližšie platby</span><div class="nu-l">'+nextUp.map(o=>'<button type="button" class="nu g-'+grpOfKey(o.x.key)+'" data-act="addFor" data-key="'+o.x.key+'"><span class="ico gi">'+ic(iconOf(o.x.key),16)+'</span><span class="nu-t"><b>'+esc(o.x.name)+'</b><small class="'+(o.s==='late'?'d-late':o.s==='soon'?'d-soon':'')+'">'+o.x.day+'. '+(M.mo+1)+'. · '+eur(Math.max(0,o.x.limit-o.x.spent))+'</small></span></button>').join('')+'</div></div>':'';
   const hero='<section class="card hero"><div class="hstats big3">'+
    '<div><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
    '<div><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
    '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
-   '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div></section>';
-  const groups=DGRP.map(g=>{
-    const its=lv.filter(x=>grpOfKey(x.key)===g.id);if(!its.length)return '';
-    const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),open=!!S.openCats[g.id],st=lim>0?status(sp,lim):{k:'ok'};
-    const cnt={};its.forEach(x=>{const k=itemState(x,M);cnt[k]=(cnt[k]||0)+1;});
-    const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
-    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi g-'+g.id+'">'+ic(GICON[g.id]||'dots',18)+'</span><span class="cg-n"><span class="nl"><b>'+g.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
-     (lim>0?'<div class="track cg-t" role="img" aria-label="'+g.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
-     (open?'<div class="cg-b">'+its.map(x=>itemRow(x,M)).join('')+'</div>':'')+'</div>';
-  }).join('');
-  const A='<div class="blk"><h3>Plánované platby <span class="small num">vyčerpané alebo uhradené '+paidN+' z '+all.length+'</span></h3><section class="card">'+(all.length?groups:'<p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p>')+'</section></div>';
+   '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div>'+nextHtml+'</section>';
+  const pv=S.pview==='date'?'date':'cat',pf=S.pfilt||'all';
+  const pass=o=>pf==='all'?true:pf==='paid'?o.s==='paid':o.s!=='paid';
+  let body;
+  if(pv==='cat'){
+    body=DGRP.map(g=>{
+      const all=st0.filter(o=>grpOfKey(o.x.key)===g.id);if(!all.length)return '';
+      const its=all.filter(pass);if(!its.length)return '';
+      const sp=sum(all.map(o=>o.x.spent)),lim=sum(all.map(o=>o.x.limit)),open=!!S.openCats[g.id],st=lim>0?status(sp,lim):{k:'ok'};
+      const cnt={};all.forEach(o=>{cnt[o.s]=(cnt[o.s]||0)+1;});
+      const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
+      return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi g-'+g.id+'">'+ic(GICON[g.id]||'dots',18)+'</span><span class="cg-n"><span class="nl"><b>'+g.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+       (lim>0?'<div class="track cg-t" role="img" aria-label="'+g.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
+       (open?'<div class="cg-b">'+its.map(o=>itemRow(o.x,M,'cat')).join('')+'</div>':'')+'</div>';
+    }).join('');
+  } else {
+    const BK=[['late','Po termíne','bad'],['soon','Do 48 hodín','orange'],['over','Prekročené budgety','bad'],['wait','Čaká na termín','mute'],['flex','Mesačné budgety','mute'],['paid','Uhradené','ok']];
+    body=BK.map(bk=>{
+      const its=st0.filter(o=>o.s===bk[0]&&pass(o));if(!its.length)return '';
+      its.sort((a,b)=>(a.x.day||99)-(b.x.day||99));
+      const amt=bk[0]==='paid'?sum(its.map(o=>o.x.spent)):sum(its.map(o=>Math.max(0,o.x.limit-o.x.spent)));
+      return '<div class="dg"><div class="dg-h"><span class="bub '+bk[2]+'">'+bk[1]+'</span><span class="small">'+its.length+' · '+(bk[0]==='paid'?'zaplatené ':'zostáva ')+'<b class="num">'+eur(amt)+'</b></span></div>'+its.map(o=>itemRow(o.x,M,'date')).join('')+'</div>';
+    }).join('');
+  }
+  const ctl='<div class="pctl"><div class="seg" role="group" aria-label="Zobrazenie">'+[['cat','Podľa kategórií'],['date','Podľa termínu']].map(x=>'<button data-act="pview" data-v="'+x[0]+'" aria-pressed="'+(pv===x[0])+'">'+x[1]+'</button>').join('')+'</div>'+
+   '<div class="subchips">'+[['all','Všetko'],['open','Neuhradené'],['paid','Uhradené']].map(x=>'<button type="button" class="sc" data-act="pfilt" data-v="'+x[0]+'" aria-pressed="'+(pf===x[0])+'">'+x[1]+'</button>').join('')+'</div></div>';
+  const A='<div class="blk"><h3>Plánované platby <span class="small num">uhradené '+paidN+' z '+lv.length+'</span></h3><section class="card">'+(lv.length?ctl+(body||'<p class="empty">Nič na zobrazenie pre tento filter.</p>'):'<p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p>')+'</section></div>';
   return head('Prehľad')+hero+'<div class="home2">'+A+doneBlock(m)+'</div>';
 }
 
@@ -892,24 +910,43 @@ function render(keepScroll){
   if(S.loaded)syncHash();
 }
 function sheetDate(){const v=$('date').value;let d=v?new Date(v+'T00:00:00'):new Date(TODAY);if(isNaN(d))d=new Date(TODAY);if(d>TODAY)d=new Date(TODAY);return d;}
+function sheetKeys(gid){
+  const out=itemList().filter(it=>grpOfKey(it.key)===gid).map(it=>({key:it.key,name:it.name,cat:it.cat}));
+  if(gid==='des')out.unshift({key:'des',name:'Desiatky',cat:CAT.des});
+  if(gid==='mim')out.push({key:'ost',name:'Ostatné',cat:CAT.ost});
+  return out;
+}
+function keyName(key){for(const g of DGRP){const f=sheetKeys(g.id).find(x=>x.key===key);if(f)return f.name;}return key;}
+function sheetRem(key){const x=monthLeaves(S.month).find(v=>v.key===key);return x?{in:true,limit:x.limit,spent:x.spent}:{in:false,limit:0,spent:0};}
+function updSave(){$('save').disabled=!parseAmt()||(S.mode==='exp'&&!S.draft.key);}
+function updSinfo(){
+  const el=$('sinfo');if(!el)return;
+  if(S.mode!=='exp'||!S.draft.key){el.innerHTML='';return;}
+  const r=sheetRem(S.draft.key),rest=r.limit-r.spent,amt=parseAmt();
+  if(!r.in||r.limit<=0){el.innerHTML='<span class="small">'+esc(keyName(S.draft.key))+' · bez budgetu v mesiaci '+mname(S.month).toLowerCase()+'</span>';return;}
+  const after=rest-amt;
+  el.innerHTML='<span class="small">Budget · zostáva <b class="num">'+eur(rest)+'</b>'+(amt?' → po zápise <b class="num '+(after>=0?'pos':'neg')+'">'+eur(after)+'</b>':'')+'</span>'+(rest>0&&Math.abs(amt-rest)>.004?'<button type="button" class="sc" data-act="sfill" data-v="'+rest+'">Zvyšok '+eur(rest)+'</button>':'');
+}
 function renderSheet(){
   const inc=S.mode==='inc';
   $('stitle').textContent=inc?'Nový príjem':'Nový výdavok';$('save').textContent=inc?'Pridať príjem':'Pridať výdavok';
   $('m-exp').setAttribute('aria-pressed',!inc);$('m-inc').setAttribute('aria-pressed',inc);
   $('catwrap').hidden=inc;$('wholbl').textContent=inc?'Kto dostal':'Kto platil';$('note').placeholder=inc?'Napr. Výplata':'Napr. Lidl';
-  $('chips').innerHTML=GRPS.map(g=>'<div class="gl">'+g[1]+'</div><div class="subchips">'+CATS.filter(c=>c.grp===g[0]).map(c=>'<button type="button" class="sc" data-act="cat" data-c="'+c.id+'" aria-pressed="'+(S.draft.cat===c.id)+'">'+c.name+'</button>').join('')+'</div>').join('');
+  $('chips').innerHTML='<div class="stiles">'+DGRP.map(g=>'<button type="button" class="stile g-'+g.id+'" data-act="sgrp" data-g="'+g.id+'" aria-pressed="'+(S.draft.grp===g.id)+'"><span class="ico gi">'+ic(GICON[g.id],18)+'</span><span>'+g.name+'</span></button>').join('')+'</div>';
   $('whoseg').innerHTML=['J','I'].map(w=>'<button type="button" data-act="who" data-w="'+w+'" aria-pressed="'+(S.draft.who===w)+'">'+dot(w,true)+PEOPLE[w]+'</button>').join('');
   const sw=$('subwrap');
-  if(inc){sw.innerHTML='<div class="subchips">'+['Výplata','Odmena','Iný príjem'].map(n=>'<button type="button" class="sc" data-act="preset" data-n="'+n+'">'+n+'</button>').join('')+'</div>';return;}
-  const c=CAT[S.draft.cat];
-  if(c.kind==='weeks'){const fa=foodAssign(sheetDate()),w=weekInfo(fa.m,fa.w);sw.innerHTML='<p class="note">Zapíše sa do týždňa '+w.n+' ('+w.range+') podľa dátumu.</p>';}
-  else if(c.subs.length) sw.innerHTML='<div class="sec-t" style="margin-bottom:8px">'+(c.kind==='debt'?'Komu':'Podkategória')+'</div><div class="subchips">'+c.subs.map(s=>'<button type="button" class="sc" data-act="sub" data-s="'+s.id+'" aria-pressed="'+(S.draft.sub===s.id)+'">'+s.name+'</button>').join('')+'</div>';
-  else sw.innerHTML='';
+  if(inc){sw.innerHTML='<div class="subchips">'+['Výplata','Odmena','Iný príjem'].map(n=>'<button type="button" class="sc" data-act="preset" data-n="'+n+'">'+n+'</button>').join('')+'</div>';updSinfo();updSave();return;}
+  const its=sheetKeys(S.draft.grp);
+  sw.innerHTML='<div class="sec-t" style="margin-bottom:8px">Položka</div><div class="sitems">'+(its.length?its.map(it=>{
+    const r=sheetRem(it.key),info=r.in?(r.limit>0?'zostáva '+eur(r.limit-r.spent)+' z '+eur(r.limit):'bez limitu'):'mimo plánu mesiaca',c=it.cat;
+    return '<button type="button" class="sit g-'+S.draft.grp+'" data-act="skey" data-k="'+it.key+'" aria-pressed="'+(S.draft.key===it.key)+'">'+gIco(it.key)+'<span class="sit-n"><b>'+esc(it.name)+'</b><small>'+esc((c.subs&&c.subs.length&&c.name!==it.name?c.name+' · ':'')+info)+'</small></span></button>';
+  }).join(''):'<p class="empty">V tejto kategórii zatiaľ nie je žiadna položka.</p>')+'</div>';
+  updSinfo();updSave();
 }
 function parseAmt(){const v=parseFloat($('amt').value.replace(/\s/g,'').replace(',','.'));return isFinite(v)&&v>0?v:0;}
 function openSheet(mode,pre){
-  S.mode=mode||'exp';S.draft={cat:'jed',sub:'',who:S.me};$('amt').value='';$('note').value='';$('date').max=iso(TODAY);$('date').min=iso(new Date(S.months[0].y,S.months[0].mo,1));$('date').value=iso(TODAY);$('save').disabled=true;
-  if(pre){S.draft.cat=pre.cat;S.draft.sub=pre.sub||'';if(pre.amt>0){$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');$('save').disabled=false;}if(pre.note)$('note').value=pre.note;}
+  S.mode=mode||'exp';S.draft={key:null,grp:'kon',who:S.me};$('amt').value='';$('note').value='';$('date').max=iso(TODAY);$('date').min=iso(new Date(S.months[0].y,S.months[0].mo,1));$('date').value=iso(TODAY);
+  if(pre){const k=pre.key||(pre.cat?(pre.sub?pre.cat+'.'+pre.sub:pre.cat):null);if(k){S.draft.key=k;S.draft.grp=grpOfKey(k);}if(pre.amt>0)$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');if(pre.note)$('note').value=pre.note;}
   renderSheet();$('sheet').hidden=false;setTimeout(()=>$('amt').focus(),30);
 }
 function closeSheet(){$('sheet').hidden=true;}
@@ -961,13 +998,18 @@ document.addEventListener('click',e=>{
   else if(a==='incAll'){S.incAll=!S.incAll;render(true);}
   else if(a==='repAll'){S.repAll=!S.repAll;render(true);}
   else if(a==='add'){openSheet('exp');}
-  else if(a==='addFor'){const it=monthLeaves(S.month).find(x=>x.key===el.dataset.key);if(it)openSheet('exp',Object.assign({amt:it.day?Math.max(0,it.limit-it.spent):0,note:it.day?it.name:''},it.pre));}
+  else if(a==='addFor'){const it=monthLeaves(S.month).find(x=>x.key===el.dataset.key);if(it)openSheet('exp',{key:it.key,amt:it.day?Math.max(0,it.limit-it.spent):0,note:it.day?it.name:''});}
   else if(a==='addinc'){openSheet('inc');}
   else if(a==='mode'){S.mode=el.dataset.v;renderSheet();}
   else if(a==='preset'){$('note').value=el.dataset.n;}
   else if(a==='close'){closeSheet();}
-  else if(a==='cat'){const c=CAT[el.dataset.c];S.draft.cat=c.id;S.draft.sub=(c.kind==='weeks'||!c.subs.length)?'':c.subs[0].id;renderSheet();}
-  else if(a==='sub'){S.draft.sub=el.dataset.s;renderSheet();}
+  else if(a==='pview'){S.pview=el.dataset.v;render(true);}
+  else if(a==='pfilt'){S.pfilt=el.dataset.v;render(true);}
+  else if(a==='dwho'){S.doneWho=el.dataset.v;S.doneN=5;render(true);}
+  else if(a==='sgrp'){S.draft.grp=el.dataset.g;if(S.draft.key&&grpOfKey(S.draft.key)!==S.draft.grp)S.draft.key=null;renderSheet();}
+  else if(a==='skey'){S.draft.key=el.dataset.k;renderSheet();const n=$('note');if(n&&!n.value)n.placeholder=keyName(S.draft.key);}
+  else if(a==='sfill'){$('amt').value=String(Math.round(+el.dataset.v*100)/100).replace('.',',');updSinfo();updSave();}
+  else if(a==='dq'){const d=new Date(TODAY);d.setDate(d.getDate()-(+el.dataset.d));$('date').value=iso(d);renderSheet();}
   else if(a==='who'){S.draft.who=el.dataset.w;renderSheet();}
   else if(a==='newM'){openEditor('new');}
   else if(a==='editM'){openEditor('edit',+el.dataset.m);}
@@ -988,7 +1030,7 @@ document.addEventListener('click',e=>{
 });
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.idlg)closeIdlg();else if(!$('sheet').hidden)closeSheet();else if(E){E=null;$('editor').hidden=true;}}});
-$('amt').addEventListener('input',()=>{$('save').disabled=!parseAmt();});
+$('amt').addEventListener('input',()=>{updSave();updSinfo();});
 $('date').addEventListener('change',renderSheet);
 $('editor').addEventListener('input',edInput);
 $('editor').addEventListener('change',edInput);
@@ -1004,10 +1046,9 @@ $('form').addEventListener('submit',async e=>{
       S.month=M_(m).status==='planned'?S.month:m;S.tab='bud';S.grp='all';closeSheet();render();
       toast('Príjem '+eur2(amt)+' pridaný');return;
     }
-    const c=CAT[S.draft.cat];let m,sub='';
-    if(c.kind==='weeks'){const fa=foodAssign(dt);m=fa.m;sub='w'+fa.w;}
-    else{m=calIdx(dt);if(m<0)m=S.month;sub=c.subs.length?(S.draft.sub||c.subs[0].id):'';}
-    const r=await rpc('add_transaction',{p_code:S.code,p_month:M_(m).id,p_dt:iso(dt),p_cat:c.id,p_sub:sub,p_amount:round2(amt),p_who:S.draft.who,p_note:$('note').value.trim()||c.name});
+    if(!S.draft.key){btn.disabled=false;S.busy--;return;}
+    const kp=S.draft.key.split('.'),c=CAT[kp[0]],sub=kp[1]||'';let m=calIdx(dt);if(m<0)m=S.month;
+    const r=await rpc('add_transaction',{p_code:S.code,p_month:M_(m).id,p_dt:iso(dt),p_cat:c.id,p_sub:sub,p_amount:round2(amt),p_who:S.draft.who,p_note:$('note').value.trim()||keyName(S.draft.key)});
     S.tx.push({id:r.id,m,dt,cat:c.id,sub,amt:+r.amount,who:r.who,note:r.note});
     S.month=M_(m).status==='planned'?S.month:m;S.tab='home';closeSheet();render();
     toast('Výdavok '+eur2(amt)+' pridaný');

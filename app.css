@@ -619,3 +619,33 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .icb[aria-pressed="true"]{border-color:var(--gc);color:var(--gc);background:color-mix(in srgb,var(--gc) 12%,var(--surface))}
 .sc.new{border-style:dashed}
 #idlg .sheet{max-height:92%;overflow-y:auto}
+
+/* --- prehľad: ovládanie, najbližšie platby, kompaktné riadky --- */
+.pctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.nextup{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.nu-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:8px}
+.nu{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font:inherit;color:inherit;cursor:pointer}
+.nu:hover{background:var(--surface-2)}
+.nu-t{display:flex;flex-direction:column;min-width:0}.nu-t small{font-size:12.5px;color:var(--muted)}
+.nu-t small.d-soon{color:var(--orange)}.nu-t small.d-late{color:var(--bad)}
+.dg{padding:6px 0 4px}
+.dg+.dg{border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.dg-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}
+.it-top{grid-template-columns:34px minmax(0,1fr) minmax(120px,170px) auto}
+.pr-a .mini{width:100%;margin-top:4px}
+.pr-a{align-items:stretch;text-align:right;min-width:0}
+.it{padding:8px 0}
+/* --- karta pridania zápisu --- */
+.sinfo{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;min-height:0;margin:-4px 0 0}
+.stiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.stile{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font:inherit;font-weight:600;font-size:13.5px;color:inherit;cursor:pointer;text-align:left}
+.stile[aria-pressed="true"]{border-color:var(--gc);background:color-mix(in srgb,var(--gc) 10%,var(--surface))}
+.stile .gi{width:28px;height:28px;border-radius:8px;flex:none}
+.sitems{display:flex;flex-direction:column;gap:6px;max-height:230px;overflow-y:auto;padding:2px}
+.sit{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font:inherit;color:inherit;cursor:pointer}
+.sit[aria-pressed="true"]{border-color:var(--gc);background:color-mix(in srgb,var(--gc) 10%,var(--surface))}
+.sit-n{display:flex;flex-direction:column;min-width:0}.sit-n small{font-size:12.5px;color:var(--muted)}
+.dq{display:flex;gap:8px;align-items:center}.dq input{flex:1;min-width:0}
+@media (min-width:1000px){.sheet{max-width:640px}}
+@media (max-width:700px){.it-top{grid-template-columns:34px minmax(0,1fr) auto}.it-top .pr-a{grid-column:2/3;grid-row:2}.it-top .padd{grid-row:1/3;grid-column:3}}
+.dsort .sc,.pctl .sc{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
