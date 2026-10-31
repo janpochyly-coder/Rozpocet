@@ -1,4 +1,4 @@
-const CACHE = 'rodinny-rozpocet-v17';
+const CACHE = 'rodinny-rozpocet-v18';
 const ASSETS = ['./', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

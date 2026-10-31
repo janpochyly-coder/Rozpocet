@@ -734,11 +734,33 @@ function copyText(t){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>toast('Kopírovanie sa nepodarilo. Označte text ručne.',true));}
   else toast('Kopírovanie nie je dostupné. Označte text ručne.',true);
 }
+const TSLUG={home:'prehlad',bud:'rozpocet',ana:'analytika',plan:'plan'};
+const GSLUG={des:'desiatky',byv:'byvanie',kon:'konzum',pra:'pravidelne',odk:'odkladanie',dlh:'dlhy',mim:'mimoriadne'};
+let hashInit=false;
+function hashOf(){let h=TSLUG[S.tab]||'prehlad';if(S.tab==='bud'&&GSLUG[S.grp])h+='/'+GSLUG[S.grp];if(S.tab==='ana'&&S.anaTab==='rep')h+='/report';return h;}
+function syncHash(){
+  const h='#'+hashOf();if(location.hash===h){hashInit=true;return;}
+  try{history[hashInit?'pushState':'replaceState'](null,'',location.pathname+location.search+h);}catch(e){}
+  hashInit=true;
+}
+function applyHash(){
+  const p=location.hash.replace(/^#\/?/,'').split('/');
+  if(!p[0]||/^k=/.test(p[0]))return false;
+  const t=Object.keys(TSLUG).find(k=>TSLUG[k]===p[0]);if(!t)return false;
+  S.tab=t;
+  if(t==='bud')S.grp=Object.keys(GSLUG).find(k=>GSLUG[k]===p[1])||'all';
+  if(t==='ana')S.anaTab=p[1]==='report'?'rep':'ana';
+  return true;
+}
+function onHash(){if(S.loaded&&applyHash()){S.confirm=false;render();}}
+window.addEventListener('hashchange',onHash);
+window.addEventListener('popstate',onHash);
 function render(keepScroll){
   const sc=$('screen'),st=sc.scrollTop;
   sc.innerHTML='<div class="cols">'+({home:viewHome,bud:viewBudgets,ana:viewAnalytics,plan:viewPlan})[S.tab]()+'</div>';
   sc.scrollTop=keepScroll?st:0;
   hideTip();renderTabs();
+  if(S.loaded)syncHash();
 }
 function sheetDate(){const v=$('date').value;let d=v?new Date(v+'T00:00:00'):new Date(TODAY);if(isNaN(d))d=new Date(TODAY);if(d>TODAY)d=new Date(TODAY);return d;}
 function renderSheet(){
@@ -904,7 +926,7 @@ async function boot(){
   try{
     const r=await loadAll(false,true);
     if(r==='gate')return gateView();
-    hideGate();S.tab='home';render();
+    hideGate();S.tab='home';applyHash();render();
   }catch(e){
     console.error(e);
     if(e.status&&e.status<500){store.del('rr_code');S.code=null;return gateView('Kód už neplatí. Pripojte sa znova.');}
