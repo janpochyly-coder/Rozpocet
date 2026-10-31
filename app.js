@@ -283,12 +283,15 @@ function doneBlock(m){
   return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(a)+' – '+fd(b)+'</span></h3><section class="card">'+(all.length?txRows(shown)+(all.length>4?'<button class="link" data-act="doneAll" aria-expanded="'+S.doneAll+'">'+(S.doneAll?'Zobraziť menej':'Zobraziť všetkých '+all.length)+'</button>':''):'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+'<p class="note" style="margin-top:10px">Mesiac sa na začiatku a na konci dopĺňa na celé týždne.</p></section></div>';
 }
 function viewHome(){
-  const m=S.month, spent=total(m), bud=budget(m), left=bud-spent, open=M_(m).status==='active';
+  const m=S.month, spent=total(m), bud=budget(m), left=bud-spent, open=M_(m).status==='active', inc=income(m), rec=received(m), bal=inc-spent;
   const st=open?'':'<div style="margin-top:12px">'+pill(left>=0?{k:'ok',t:'Pod rozpočtom',i:'check'}:{k:'bad',t:'Nad rozpočtom',i:'over'})+'</div>';
   return head('Prehľad')+
   '<section class="card hero"><div class="lbl">Minuté · '+mname(m)+'</div><div class="big num">'+eur(spent)+'</div>'+
   '<div class="track" role="img" aria-label="Minuté '+eur(spent)+' z '+eur(bud)+'"><div class="fill'+(spent>bud?' bad':'')+'" style="width:'+pctOf(spent,bud)+'%"></div></div>'+
-  '<div class="row-between small" style="margin-top:8px"><span class="num">z '+eur(bud)+' rozpočtu</span><span class="num">'+(left>=0?'zostáva <b>'+eur(left)+'</b>':'nad o <b>'+eur(-left)+'</b>')+'</span></div>'+st+'</section>'+
+  '<div class="row-between small" style="margin-top:8px"><span class="num">z '+eur(bud)+' potreby</span><span class="num">'+(left>=0?'zostáva <b>'+eur(left)+'</b>':'nad o <b>'+eur(-left)+'</b>')+'</span></div>'+st+
+  '<div class="hstats"><div><span>Príjem</span><b class="num">'+eur(inc)+'</b><small>'+(open&&rec<inc?'prijaté '+eur(rec):'')+'</small></div>'+
+  '<div><span>Potreba</span><b class="num">'+eur(bud)+'</b><small>'+(left>0?'ešte '+eur(left):'splnená')+'</small></div>'+
+  '<div class="'+(bal>=0?'ok':'bad')+'"><span>Zostatok</span><b class="num">'+eur(bal)+'</b><small>po splnení potreby '+eur(inc-bud)+'</small></div></div></section>'+
   upcomingBlock(m)+gradualBlock(m)+doneBlock(m);
 }
 

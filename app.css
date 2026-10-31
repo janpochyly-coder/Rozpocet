@@ -394,3 +394,12 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 @media (min-width:1000px){
   .editor{width:min(900px,calc(100% - 48px))}
 }
+
+/* --- prehľad: príjem / potreba / zostatok --- */
+.hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.hstats>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hstats span{font-size:12.5px;color:var(--muted);font-weight:600}
+.hstats b{font-family:var(--f-display);font-size:20px;line-height:1.2}
+.hstats small{font-size:12px;color:var(--muted);min-height:1.2em}
+.hstats .ok b{color:var(--ok)}.hstats .bad b{color:var(--bad)}
+@media (min-width:1000px){.hstats b{font-size:26px}}
