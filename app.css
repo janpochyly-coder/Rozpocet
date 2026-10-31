@@ -385,7 +385,7 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .er-x{width:28px;height:28px;border-radius:8px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
 .er-x:hover{background:var(--surface-2);color:var(--bad)}
 .er-inc{grid-template-columns:minmax(0,1fr) 130px}
-@media (max-width:700px){
+@media (max-width:999px){
   .er-h{display:none}
   .er{grid-template-columns:minmax(0,1fr) 112px 28px;grid-template-areas:"n l x" "d d d";row-gap:6px}
   .er>.er-n{grid-area:n}.er>.er-l{grid-area:l}.er>.er-d{grid-area:d}.er>.er-x,.er>span{grid-area:x}
@@ -565,7 +565,7 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .pv:first-child{border-top:0}
 .pv-h{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}
 .pv-m{display:flex;flex-direction:column;gap:2px}
-@media (min-width:700px){.kpi4{grid-template-columns:repeat(4,minmax(0,1fr))}.kpi4 b{font-size:30px}}
+@media (min-width:1000px){.kpi4{grid-template-columns:repeat(4,minmax(0,1fr))}.kpi4 b{font-size:30px}}
 @media (min-width:1000px){
   .cols>.bhero{column-span:all}
   .cols>.ana2{column-span:all;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 28px;align-items:start;break-inside:auto}
@@ -647,7 +647,7 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .sit-n{display:flex;flex-direction:column;min-width:0}.sit-n small{font-size:12.5px;color:var(--muted)}
 .dq{display:flex;gap:8px;align-items:center}.dq input{flex:1;min-width:0}
 @media (min-width:1000px){.sheet{max-width:640px}}
-@media (max-width:700px){.it-top{grid-template-columns:34px minmax(0,1fr) auto}.it-top .pr-a{grid-column:2/3;grid-row:2}.it-top .padd{grid-row:1/3;grid-column:3}}
+@media (max-width:999px){.it-top{grid-template-columns:34px minmax(0,1fr) auto}.it-top .pr-a{grid-column:2/3;grid-row:2}.it-top .padd{grid-row:1/3;grid-column:3}}
 .dsort .sc,.pctl .sc{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 
 /* --- odlíšené hlavné čísla, text stavov, kompaktná karta úhrady --- */
@@ -663,3 +663,23 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .dgt{font-size:13px}.dgt.bad{color:var(--bad)}.dgt.orange{color:var(--orange)}.dgt.ok{color:var(--ok)}.dgt.mute{color:var(--ink)}
 .fxit{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,var(--surface))}
 .fxit .link{margin:0}
+.stiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.stile{min-width:0}
+.stile span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* --- úzke zobrazenie (mobil aj tablet v rámčeku telefónu) --- */
+@media (max-width:999px){
+  .big3{gap:8px}
+  .big3 b{font-size:21px}
+  .hstats>div.st-inc,.hstats>div.st-rest,.hstats>div.st-spent{padding:10px 10px}
+  .hstats small{font-size:11.5px}
+  .nu-l{display:flex;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
+  .nu-l::-webkit-scrollbar{display:none}
+  .nu{flex:0 0 190px}
+  .kpi4 b{font-size:22px}
+  .bhero .big2{font-size:34px}
+  .bh-st{gap:16px}
+  .bh-st b{font-size:19px}
+}
+#form{overflow-y:auto;max-height:100%}
+#form #save{position:sticky;bottom:0;box-shadow:0 -10px 14px -6px var(--surface)}
+.sitems{max-height:190px}
