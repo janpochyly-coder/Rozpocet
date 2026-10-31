@@ -519,11 +519,11 @@ function householdBlock(){
    '<button class="link" data-act="disconnect">Odpojiť toto zariadenie</button></section></div>';
 }
 function itemsBlock(){
-  const its=itemList(),byCat={};
-  its.forEach(it=>{(byCat[it.cat.id]=byCat[it.cat.id]||[]).push(it);});
-  const groups=CATS.filter(c=>byCat[c.id]).map(c=>{
-    const rows=byCat[c.id].map(it=>{
-      const v=itemStav(it),open=S.itemOpen===it.key;
+  const its=itemList(),byG={};
+  its.forEach(it=>{const g=grpOfKey(it.key);(byG[g]=byG[g]||[]).push(it);});
+  const groups=DGRP.filter(g=>byG[g.id]).map(g=>{
+    const rows=byG[g.id].map(it=>{
+      const c=it.cat,v=itemStav(it),open=S.itemOpen===it.key;
       let panel='';
       if(open){
         if(it.debt)panel='<div class="ip"><p class="small" style="margin:0">Zostatok dlhu '+eur(v.value)+'. Každá splátka, ktorú pridáte, ho zníži automaticky.</p></div>';
@@ -535,9 +535,9 @@ function itemsBlock(){
             '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button></div></div>';
         }
       }
-      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'"><span class="nm">'+esc(c.subs.length?it.name:c.name)+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
+      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'"><span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
     }).join('');
-    return '<div class="ig"><div class="ig-h">'+c.name+'</div>'+rows+'</div>';
+    return '<div class="ig"><div class="ig-h">'+g.name+'</div>'+rows+'</div>';
   }).join('');
   return '<div class="blk"><h3>Výdavky <span class="small">'+its.length+' položiek</span></h3><section class="card"><p class="small" style="margin:0 0 6px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore (Pridať z výdavkov).</p>'+groups+'</section></div>';
 }
@@ -641,7 +641,7 @@ function renderEditor(keep){
     return '<section class="card eg2"><div class="eg2-h"><h3>'+g.name+'</h3><b class="num" data-sum="g.'+g.id+'">'+eur(m.g[g.id]||0)+'</b></div>'+es.map(e=>e.html).join('')+'</section>';
   }).join('');
   const avail=itemList().filter(it=>!inLim(it.key));
-  const pick=avail.length?CATS.filter(c=>avail.some(it=>it.cat.id===c.id)).map(c=>'<div class="gl">'+c.name+'</div><div class="subchips">'+avail.filter(it=>it.cat.id===c.id).map(it=>{const sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div>').join(''):'<p class="empty">Všetky výdavky už v mesiaci sú.</p>';
+  const pick=avail.length?DGRP.filter(g=>avail.some(it=>grpOfKey(it.key)===g.id)).map(g=>'<div class="gl">'+g.name+'</div><div class="subchips">'+avail.filter(it=>grpOfKey(it.key)===g.id).map(it=>{const c=it.cat,sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div>').join(''):'<p class="empty">Všetky výdavky už v mesiaci sú.</p>';
   const d=m.inc-m.tot;
   ed.innerHTML='<div class="ed-head"><button type="button" class="x" data-act="edClose" aria-label="Zavrieť">'+ic('x',18)+'</button><h2>'+(E.mode==='new'?'Nový mesiac':'Upraviť mesiac')+' · '+MN12[E.mo]+' '+E.y+'</h2></div>'+
    '<div class="ed-sum"><div><span>Príjem</span><b data-sum="inc">'+eur(m.inc)+'</b></div><div><span>Rozpočet spolu</span><b data-sum="tot">'+eur(m.tot)+'</b></div><div class="ed-diff '+(d>=0?'ok':'bad')+'" data-sum="diff">'+(d>=0?'Zostáva ':'Nad príjem o ')+eur(Math.abs(d))+'</div></div>'+
