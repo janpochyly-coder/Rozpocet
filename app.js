@@ -80,7 +80,7 @@ const CATS=[
  {id:'des',name:'Desiatky',icon:'heart',kind:'tithe',subs:[]},
  {id:'poz',name:'Pôžičky',icon:'file',subs:sb([['prima','Prima'],['melon','Žltý melón']])},
  {id:'byv',name:'Bývanie',icon:'home',subs:sb([['najom','Nájom'],['elektrina','Elektrina'],['o2','O2']])},
- {id:'jed',name:'Jedlo',icon:'cart',kind:'weeks',subs:sb([['w0','Týždeň 1'],['w1','Týždeň 2'],['w2','Týždeň 3'],['w3','Týždeň 4']])},
+ {id:'jed',name:'Jedlo',icon:'utensils',subs:[]},
  {id:'dro',name:'Drogéria',icon:'drop',subs:[]},
  {id:'obl',name:'Oblečenie',icon:'shirt',subs:[]},
  {id:'aut',name:'Auto',icon:'car',subs:sb([['nafta','Nafta'],['servis','Servis'],['dialnicna','Diaľničná'],['stk','STK'],['poistka','Poistka']])},
@@ -109,7 +109,7 @@ const grpOfKey=key=>{const d=S.defs&&S.defs[key];if(d&&d.grp)return d.grp;return
 function iconOf(key){const d=S.defs&&S.defs[key];if(d&&d.icon)return d.icon;if(IKEY[key])return IKEY[key];if(key.indexOf('x.')===0)return GICON[grpOfKey(key)]||'dots';const p=key.split('.');if(p[0]==='jed')return 'utensils';const c=CAT[p[0]];return c?c.icon:'dots';}
 const gIco=(key,sz)=>'<span class="ico gi g-'+grpOfKey(key)+'">'+ic(iconOf(key),sz||18)+'</span>';
 const DEFLIM={'poz.prima':540,'poz.melon':180,'byv.najom':280,'byv.elektrina':50,'byv.o2':200,
- 'jed.w0':125,'jed.w1':125,'jed.w2':125,'jed.w3':125,'dro':100,'obl':100,
+ 'jed':500,'dro':100,'obl':100,
  'aut.nafta':150,'aut.servis':45,'aut.dialnicna':10,'aut.stk':10,'aut.poistka':15,
  'app.adobe':20,'app.ytb':20,'app.spotify':10,'app.chatgpt':27,'app.claude':22,'app.shopify':27,
  'dov':100,'inv':50,'odk.deti':50,'odk.rodicia':50,'rez.r1':50,'rez.r2':null,'vyl':50,'osl':50,'pod.vszp':120,'pod.rozvoj':50};
@@ -182,8 +182,14 @@ async function loadAll(retry,force){
   const idx={};
   S.months=st.months.map((r,i)=>{idx[r.id]=i;return{id:r.id,y:r.y,mo:r.mo,status:r.status,seq:r.seq,inc:{J:+r.inc_j,I:+r.inc_i},lim:{},plan:[]};});
   st.limits.forEach(r=>{const i=idx[r.month_id];if(i!==undefined)S.months[i].lim[r.key]=r.amount===null?null:+r.amount;});
+  S.months.forEach(mm=>{ // staré týždenné limity jedla sa spoja do jednej položky
+    const ks=Object.keys(mm.lim).filter(k=>/^jed\.w\d$/.test(k));
+    if(!ks.length)return;
+    if(!Object.prototype.hasOwnProperty.call(mm.lim,'jed'))mm.lim.jed=sum(ks.map(k=>mm.lim[k]||0));
+    ks.forEach(k=>{delete mm.lim[k];});
+  });
   st.plans.slice().sort((a,b)=>a.sort-b.sort).forEach(r=>{const i=idx[r.month_id];if(i!==undefined)S.months[i].plan.push({d:r.day,name:r.name,key:r.key,amt:r.amount===null?null:+r.amount});});
-  S.tx=st.transactions.filter(r=>idx[r.month_id]!==undefined).map(r=>({id:r.id,m:idx[r.month_id],dt:parseD(r.dt),cat:r.cat,sub:r.sub,amt:+r.amount,who:r.who,note:r.note}));
+  S.tx=st.transactions.filter(r=>idx[r.month_id]!==undefined).map(r=>({id:r.id,m:idx[r.month_id],dt:parseD(r.dt),cat:r.cat,sub:r.cat==='jed'?'':r.sub,amt:+r.amount,who:r.who,note:r.note}));
   S.incTx=st.incomes.filter(r=>idx[r.month_id]!==undefined).map(r=>({id:r.id,m:idx[r.month_id],dt:parseD(r.dt),who:r.who,amt:+r.amount,note:r.note}));
   S.debts=st.debts;
   S.items={};(st.items||[]).forEach(x=>{S.items[x.key]={stav:x.stav===null?null:+x.stav,auto:!!x.auto,asOf:parseD(x.as_of)};});
@@ -317,8 +323,8 @@ function gradualBlock(m){
 }
 const DSORT=[['new','Najnovšie'],['old','Najstaršie'],['amt','Najvyššia suma']];
 function doneList(m){
-  const M=M_(m),a=mon(new Date(M.y,M.mo,1)),b=addDays(mon(new Date(M.y,M.mo,dim(M))),6);
-  const all=S.tx.filter(t=>t.dt>=a&&t.dt<=b);
+  const M=M_(m),a=new Date(M.y,M.mo,1),b=new Date(M.y,M.mo,dim(M));
+  const all=txm(m).slice();
   const cmp={new:byDateDesc,old:(x,y)=>x.dt-y.dt||x.id-y.id,amt:(x,y)=>y.amt-x.amt||byDateDesc(x,y)}[S.doneSort||'new'];
   all.sort(cmp);
   return {a:a,b:b,all:all,shown:all.slice(0,S.doneN||5)};
@@ -328,7 +334,7 @@ function doneBlock(m){
   return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(d.a)+' – '+fd(d.b)+'</span></h3><section class="card">'+
    '<div class="subchips dsort" role="group" aria-label="Zoradenie">'+DSORT.map(x=>'<button type="button" class="sc" data-act="dsort" data-v="'+x[0]+'" aria-pressed="'+(sort===x[0])+'">'+x[1]+'</button>').join('')+'</div>'+
    (d.all.length?'<div class="donelist" id="donelist" tabindex="0" aria-label="Vykonané platby">'+txRows(d.shown)+'<p class="note dmore" id="dmore">'+(d.shown.length<d.all.length?'Rolovaním zobrazíte ďalšie ('+(d.all.length-d.shown.length)+')':'To je všetko ('+d.all.length+')')+'</p></div>':'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+
-   '<p class="note" style="margin-top:10px">Mesiac sa na začiatku a na konci dopĺňa na celé týždne.</p></section></div>';
+   '</section></div>';
 }
 
 function monthLeaves(m){
@@ -507,7 +513,6 @@ function insights(){
   const over=leaves(m).filter(x=>x.spent>x.limit+.005).sort((a,b)=>(b.spent-b.limit)-(a.spent-a.limit));
   if(over.length) list.push('Nad limitom: '+over.slice(0,3).map(x=>'<b>'+esc(x.name)+'</b> (+'+eur(x.spent-x.limit)+')').join(', ')+(over.length>3?' a ďalšie '+(over.length-3):'')+'.');
   else list.push('Žiadna položka nie je nad limitom.');
-  if(M_(m).status==='closed'){const ss=bySub(m);const n=[0,1,2,3].filter(k=>(ss['jed.w'+k]||0)>(getLim(m,'jed.w'+k)||0)).length;list.push('Jedlo: nad limitom boli <b>'+n+' zo 4</b> týždňov.');}
   const dp=sum(txm(m).filter(t=>t.cat==='dlh').map(t=>t.amt));
   list.push('Na splátky dlhov išlo <b>'+eur(dp)+'</b>'+(M_(m).status==='closed'?' z plánovaných '+eur(catLimit(CAT.dlh,m)):'')+'.');
   return '<ul class="ins">'+list.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
