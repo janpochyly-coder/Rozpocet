@@ -107,9 +107,8 @@ function foodAssign(dt){
 }
 function curWeek(m){const a=mon(new Date(M_(m).y,M_(m).mo,1));const k=Math.floor(Math.round((TODAY-a)/DAYMS)/7);return Math.max(0,Math.min(3,k));}
 
-/* ---------- Supabase (volanie funkcií cez tajný kód domácnosti) ---------- */
-const SB_URL='https://xqxcxmpezqpisoatgxvi.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxeGN4bXBlenFwaXNvYXRneHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMjY5MzIsImV4cCI6MjEwNjYwMjkzMn0.63ArB-wFSOJPOJhpskEiniszWDYt9AFVR8FWCoWjxgQ';
+/* ---------- API (PHP + MySQL na hostingu; každé volanie vyžaduje tajný kód domácnosti) ---------- */
+const API='api/index.php';
 const pad2=n=>String(n).padStart(2,'0');
 const iso=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
@@ -119,7 +118,7 @@ const store={
   del(k){try{localStorage.removeItem(k);}catch(e){}}
 };
 async function rpc(fn,args){
-  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+  const r=await fetch(API+'?fn='+encodeURIComponent(fn),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args||{})});
   const t=await r.text();let j=null;
   try{j=t?JSON.parse(t):null;}catch(e){}
   if(!r.ok){const err=new Error((j&&j.message)||('HTTP '+r.status));err.status=r.status;throw err;}

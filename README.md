@@ -1,47 +1,49 @@
 # Rodinný rozpočet
 
-Rodinná aplikácia na kontrolu rozpočtu pre dvoch (J a I). Statická PWA bez build kroku a bez prihlasovania, dáta sú v Supabase a synchronizujú sa medzi všetkými zariadeniami.
+Rodinná aplikácia na kontrolu rozpočtu pre dvoch (J a I). Beží v prehliadači (Chrome) na `https://ucto.vrkociaren.sk/`, dáta sú v databáze MySQL na hostingu a synchronizujú sa medzi všetkými zariadeniami. Bez prihlasovania, zariadenia sa spájajú tajným kódom domácnosti.
 
 ## Ako to funguje
 
-- **Bez hesiel.** Domácnosť má tajný kód (32 znakov). Zariadenie, ktoré ho pozná, vidí a upravuje rozpočet.
-- **Prvé zariadenie** vytvorí domácnosť a dostane kód. V karte Plán ho nájdete aj ako odkaz.
-- **Ďalšie zariadenia** (mobil, počítač, druhý člen) otvoria odkaz alebo kód zadajú. Kód sa uloží v prehliadači.
-- **Synchronizácia:** každý zápis ide hneď do databázy. Ostatné zariadenia si zmeny načítajú do 15 sekúnd, pri otvorení aplikácie a po obnovení pripojenia.
-- Kód je ako heslo. Kto ho má, má plný prístup, preto ho nezdieľajte nikde inde. Pri úniku vytvorte novú domácnosť.
-
-## Rozloženie
-
-- Mobil a úzke okno: jeden stĺpec, navigácia dole.
-- Počítač (šírka od 1000 px): bočný panel s navigáciou, obsah v dvoch stĺpcoch (v širokom okne v troch), okná na zápis a úpravu mesiaca ako dialóg v strede.
+- **Bez hesiel.** Domácnosť má tajný kód (32 znakov). Zariadenie, ktoré ho pozná, vidí a upravuje rozpočet. Kód je ako heslo, nezdieľajte ho. Pri úniku vytvorte novú domácnosť.
+- **Prvé zariadenie** vytvorí domácnosť a dostane kód (karta Plán, Zdieľanie a zariadenie).
+- **Ďalšie zariadenia** otvoria odkaz `https://ucto.vrkociaren.sk/#k=KÓD` alebo kód zadajú. Kód sa uloží v prehliadači (pre každú doménu zvlášť).
+- Každý zápis ide hneď do databázy. Ostatné zariadenia si zmeny načítajú do 15 sekúnd, pri otvorení aplikácie a po obnovení pripojenia.
 
 ## Štruktúra
 
 - `index.html`, `app.css`, `app.js`: aplikácia (čistý JavaScript, bez knižníc)
-- `sw.js`, `manifest.webmanifest`, `icons/`: PWA (inštalácia na plochu)
-- `supabase/migrations/`: schéma databázy a funkcie
+- `sw.js`, `manifest.webmanifest`, `icons/`: PWA (nie je povinné inštalovať)
+- `api/`: API v PHP (`index.php`, `db.php`), tabuľky sa vytvoria samy pri prvom volaní
+- `.htaccess`: základné zabezpečenie na Apache hostingu
 
-## Databáza (Supabase)
+## Nasadenie na Websupport
 
-Projekt `rodinny-rozpocet`, eu-central-1. Dáta sú v schéme `budget`, ktorá nie je vystavená cez API. Anonymný kľúč v `app.js` vie volať iba tieto funkcie, každá vyžaduje kód domácnosti:
+Workflow `.github/workflows/deploy-websupport.yml` nahrá súbory cez FTP(S) po každom pushi do `main`. Tajné kľúče (Settings > Secrets and variables > Actions):
 
-`create_household`, `get_state`, `add_transaction`, `add_income`, `set_limit`, `save_month`, `switch_month`.
+| Kľúč | Význam |
+|---|---|
+| `FTP_SERVER` | adresa FTP servera |
+| `FTP_USERNAME`, `FTP_PASSWORD` | FTP prístup |
+| `FTP_DIR` | cieľový priečinok subdomény na serveri (končí lomkou, napr. `/ucto/`) |
+| `FTP_PROTOCOL` (voliteľný) | `ftps` (predvolené) alebo `ftp` |
+| `FTP_PORT` (voliteľný) | predvolene 21 |
+| `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` | údaje MySQL databázy z administrácie hostingu |
+| `SEED_DEBTS_JSON` (voliteľný) | počiatočné dlhy pre novú domácnosť, napr. `[{"sub":"id","name":"Názov","balance":1000}]` |
 
-Staré tabuľky vo verejnej schéme (zostali z prvej verzie s účtami) sú uzamknuté a nepoužívajú sa. Dajú sa zmazať v dashboarde.
+Súbor `api/config.php` sa vytvorí pri nasadení z týchto kľúčov a nie je v gite.
 
-## Adresa
+Kontrola po nasadení: `curl -X POST "https://ucto.vrkociaren.sk/api/index.php?fn=health"` vráti `{"ok":true,"driver":"mysql"}`.
 
-Aplikácia beží na `https://ucto.vrkociaren.sk/` (GitHub Pages s vlastnou doménou). DNS: záznam `CNAME` s názvom `ucto` smerujúci na `janpochyly-coder.github.io`. V repozitári Settings > Pages > Custom domain je nastavené `ucto.vrkociaren.sk`.
+## Lokálne spustenie a testy
 
-Kód domácnosti sa v prehliadači ukladá pre každú doménu zvlášť. Na novej adrese treba raz otvoriť odkaz `https://ucto.vrkociaren.sk/#k=KÓD` alebo kód zadať.
+```
+cp api/config.sample.php api/config.php     # a nastavte driver sqlite s cestou k súboru
+php -S 127.0.0.1:8777 -t .
+```
 
-## Udržiavanie databázy aktívnej
+## Zálohy
 
-Supabase (free plán) pozastaví projekt po týždni bez aktivity. Workflow `.github/workflows/keepalive.yml` volá databázu každé 3 dni. Ak sa projekt pozastaví, beh skončí chybou a GitHub pošle e-mail.
-
-## Nasadenie
-
-Súbory sú statické, stačí ich vystaviť na ľubovoľnom hostingu. Workflow `.github/workflows/pages.yml` ich publikuje cez GitHub Pages (Settings > Pages > Source: GitHub Actions).
+Databázu zálohujte v administrácii hostingu (export z phpMyAdmin) alebo nastavte automatickú zálohu u poskytovateľa.
 
 ## Čo aplikácia nerobí
 
