@@ -393,37 +393,41 @@ function catVisible(c,m,cc){
   return c.subs.length?c.subs.some(x=>isIn(m,c.id+'.'+x.id)):isIn(m,c.id);
 }
 const GICON={des:'heart',byv:'home',kon:'cart',pra:'phone',odk:'archive',dlh:'cash',mim:'sun'};
-function budSubRow(it,m,ro){
+function budItem(it,m){
   const c=it.c,key=it.key,pr=key.split('.'),has=it.limit>0||getLim(m,key)!==null;
-  const sv=stavTxt({key:key,debt:c.kind==='debt',sub:c.kind==='debt'?c.subs.find(x=>x.id===pr[1]):null});
-  const dbt=c.kind==='debt'?'zostatok '+eur(debtBal(c.subs.find(x=>x.id===pr[1])||{bal:0,asOf:TODAY,id:''})):'';
+  const ds=c.kind==='debt'?c.subs.find(x=>x.id===pr[1]):null;
+  const sv=stavTxt({key:key,debt:c.kind==='debt',sub:ds});
+  const dbt=ds?'zostatok '+eur(debtBal(ds)):'';
   const info=[it.sub&&it.sub!==c.name?it.sub:(c.name!==it.name?c.name:''),sv,dbt,it.day?'platba '+it.day+'.':''].filter(Boolean).join(' · ');
-  const head='<div class="nm">'+esc(it.name)+'<span class="num">'+eur(it.spent)+(has?' z '+eur(it.limit):' · bez limitu')+(info?' · '+esc(info):'')+'</span></div>';
-  if(c.kind==='tithe')return '<div class="sub">'+head+(ro?'':'<span class="small">sám: 10 % z príjmu</span>')+'</div>';
-  if(c.kind==='manual')return '<div class="sub">'+head+'</div>';
   const st=has?status(it.spent,it.limit):null,step=c.kind==='debt'?25:(has&&it.limit>=100?10:5);
-  return '<div class="sub">'+head+(ro?'':stepper('lim','data-c="'+pr[0]+'"'+(pr[1]?' data-s="'+pr[1]+'"':''),it.limit||0,'limit',step))+(has?'<div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+'</div>';
+  const left=it.limit-it.spent;
+  const ctl=c.kind==='tithe'?'<span class="small">sám, 10 % z príjmu</span>':c.kind==='manual'?'':stepper('lim','data-c="'+pr[0]+'"'+(pr[1]?' data-s="'+pr[1]+'"':''),it.limit||0,'limit',step);
+  return '<div class="bi"><span class="ico bi-i">'+ic(c.icon,18)+'</span><div class="bi-n"><b>'+esc(it.name)+'</b><span>'+(info?esc(info):'&nbsp;')+'</span></div><div class="bi-c">'+ctl+'</div>'+
+   '<div class="bi-b">'+(has?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
+   '<span class="bi-s num"><b>'+eur(it.spent)+'</b>'+(has?' z '+eur(it.limit)+' · '+(left>=0?'zostáva '+eur(left):'<span class="neg">nad o '+eur(-left)+'</span>'):' · bez limitu')+'</span></div></div>';
 }
 function viewBudgets(){
-  const m=S.month,lv=monthLeaves(m),sel=DGRP.some(g=>g.id===S.grp)?S.grp:'all';
-  const part=sel==='all'?lv:lv.filter(x=>grpOfKey(x.key)===sel);
-  const spentAll=sum(part.map(x=>x.spent)),limAll=sum(part.map(x=>x.limit)),left=limAll-spentAll,st0=status(spentAll,limAll);
-  const tabs='<div class="seg full scroll" role="group" aria-label="Kategória">'+[['all','Spolu']].concat(DGRP.map(g=>[g.id,g.name])).map(x=>'<button data-act="grp" data-g="'+x[0]+'" aria-pressed="'+(sel===x[0])+'">'+x[1]+'</button>').join('')+'</div>';
-  const summary='<section class="card"><div class="small">'+(left>=0?'Zostáva':'Prekročené o')+'</div><div class="big2 num">'+eur(Math.abs(left))+'</div><div class="track"><div class="fill '+(st0.k==='ok'?'':st0.k)+'" style="width:'+pctOf(spentAll,limAll)+'%"></div></div><div class="row-between small" style="margin-top:8px"><span>Minuté <b class="num">'+eur(spentAll)+'</b></span><span class="num">z '+eur(limAll)+'</span></div></section>';
-  const manualTx=()=>txm(m).some(t=>t.cat==='ost')?'<div class="subs">'+txRows(txm(m).filter(t=>t.cat==='ost').sort(byDateDesc))+'</div>':'';
-  let body;
-  if(sel==='all'){
-    body=DGRP.map(g=>{
-      const its=lv.filter(x=>grpOfKey(x.key)===g.id);if(!its.length)return '';
-      return '<div class="blk"><h3><button class="link gh" data-act="grp" data-g="'+g.id+'">'+g.name+'</button> <span class="small num">'+eur(sum(its.map(x=>x.spent)))+' z '+eur(sum(its.map(x=>x.limit)))+'</span></h3><section class="card bud"><div class="subs">'+its.map(x=>budSubRow(x,m,true)).join('')+'</div></section></div>';
-    }).join('');
-  } else {
-    const g=DGRP.find(x=>x.id===sel),note=sel==='dlh'?'<p class="small" style="margin:0 0 6px">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách: '+eur(leftover(m))+'. Zostatok dlhov spolu: '+eur(sum(CAT.dlh.subs.map(debtBal)))+'.</p>':'';
-    body=part.length?'<section class="card bud"><div class="subs">'+note+part.map(x=>budSubRow(x,m)).join('')+'</div>'+(sel==='mim'?manualTx():'')+'</section>':'<section class="card"><p class="empty">V tomto mesiaci tu nie je žiadna položka. Pridáte ju v karte Plán (Upraviť mesiac, Pridať z výdavkov).</p></section>';
-  }
-  const raw=rawPlan(m),inc=income(m);
-  return head('Rozpočet')+tabs+summary+(sel==='all'?incomeBlock(m):'')+body+
-    '<p class="note">Zmena limitu platí len pre mesiac '+mname(m)+'. Celý mesiac upravíte v karte Plán.</p>'+(raw>inc?'<div class="warnbox">Plán bez dlhov prevyšuje príjem o '+eur(raw-inc)+'.</div>':'');
+  const m=S.month,lv=monthLeaves(m),inc=income(m);
+  const gs=DGRP.map(g=>{const its=lv.filter(x=>grpOfKey(x.key)===g.id);return {g:g,its:its,sp:sum(its.map(x=>x.spent)),lim:sum(its.map(x=>x.limit))};}).filter(x=>x.its.length);
+  if(!gs.length)return head('Rozpočet')+'<section class="card"><p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p></section>';
+  const sel=gs.find(x=>x.g.id===S.grp)||gs.find(x=>x.g.id!=='des')||gs[0];
+  const spentAll=sum(gs.map(x=>x.sp)),limAll=sum(gs.map(x=>x.lim)),left=limAll-spentAll;
+  const hero='<section class="card bhero"><div class="bh-top"><div><div class="small">Rozpočet mesiaca</div><div class="big2 num">'+eur(limAll)+'</div></div>'+
+   '<div class="bh-st"><div><span>Minuté</span><b class="num">'+eur(spentAll)+'</b></div><div><span>'+(left>=0?'Zostáva':'Nad rozpočtom')+'</span><b class="num '+(left>=0?'pos':'neg')+'">'+eur(Math.abs(left))+'</b></div><div><span>Príjem</span><b class="num">'+eur(inc)+'</b></div></div></div>'+
+   '<div class="stack" role="img" aria-label="Rozdelenie rozpočtu podľa kategórií">'+gs.filter(x=>x.lim>0).map(x=>'<button class="g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" style="flex:'+x.lim+'" title="'+x.g.name+': '+eur(x.lim)+'" aria-label="'+x.g.name+' '+eur(x.lim)+'"></button>').join('')+'</div>'+
+   '<div class="legend">'+gs.filter(x=>x.lim>0).map(x=>'<span class="g-'+x.g.id+'"><i></i>'+x.g.name+' <b class="num">'+eur(x.lim)+'</b></span>').join('')+'</div></section>';
+  const tiles='<div class="tiles" role="group" aria-label="Kategórie">'+gs.map(x=>{
+    const s=status(x.sp,x.lim),l=x.lim-x.sp;
+    return '<button class="tile g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" aria-pressed="'+(sel.g.id===x.g.id)+'"><span class="tile-i">'+ic(GICON[x.g.id]||'dots',20)+'</span><span class="tile-n"><b>'+x.g.name+'</b><small class="num">'+eur(x.sp)+(x.lim>0?' z '+eur(x.lim):'')+'</small></span>'+
+     (x.lim>0?'<span class="tile-t track thin"><span class="fill '+(s.k==='ok'?'':s.k)+'" style="width:'+pctOf(x.sp,x.lim)+'%"></span></span>':'')+'</button>';
+  }).join('')+'</div>';
+  const sm=sel.lim-sel.sp,sst=status(sel.sp,sel.lim);
+  const note=sel.g.id==='dlh'?'<p class="small bnote">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách: '+eur(leftover(m))+'. Zostatok dlhov spolu: '+eur(sum(CAT.dlh.subs.map(debtBal)))+'.</p>':'';
+  const manual=sel.g.id==='mim'&&txm(m).some(t=>t.cat==='ost')?'<div class="bnote"><div class="small" style="margin-bottom:6px">Ručné zápisy (Ostatné)</div>'+txRows(txm(m).filter(t=>t.cat==='ost').sort(byDateDesc))+'</div>':'';
+  const detail='<section class="card bdet g-'+sel.g.id+'"><div class="bd-h"><span class="tile-i big">'+ic(GICON[sel.g.id]||'dots',24)+'</span><div class="bd-t"><h3>'+sel.g.name+'</h3><span class="small num">'+sel.its.length+(sel.its.length===1?' položka':sel.its.length<5?' položky':' položiek')+'</span></div><div class="bd-r num"><b>'+eur(sel.sp)+'</b><span class="small">'+(sel.lim>0?'z '+eur(sel.lim):'bez limitu')+'</span></div></div>'+
+   (sel.lim>0?'<div class="track"><div class="fill '+(sst.k==='ok'?'':sst.k)+'" style="width:'+pctOf(sel.sp,sel.lim)+'%"></div></div>':'')+note+'<div class="bd-l">'+sel.its.map(x=>budItem(x,m)).join('')+'</div>'+manual+'</section>';
+  const raw=rawPlan(m);
+  return head('Rozpočet')+hero+'<div class="bud2"><div class="bud2-t">'+tiles+'</div><div class="bud2-r">'+detail+'<p class="note">Zmena limitu platí len pre mesiac '+mname(m)+'. Celý mesiac upravíte v karte Plán.</p>'+(raw>inc?'<div class="warnbox">Plán bez dlhov prevyšuje príjem o '+eur(raw-inc)+'.</div>':'')+'</div><div class="bud2-i">'+incomeBlock(m)+'</div></div>';
 }
 
 /* ---------- grafy a analytika ---------- */
