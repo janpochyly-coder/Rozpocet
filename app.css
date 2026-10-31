@@ -1134,3 +1134,32 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 :root[data-style="western"][data-theme="dark"] .track{background:#3A2B1C}
 :root[data-style="western"][data-theme="dark"] .seg button[aria-pressed="true"],:root[data-style="western"][data-theme="dark"] .sc[aria-pressed="true"]{background:var(--brass);color:#1A120C}
 :root[data-style="western"][data-theme="dark"] .blk>h3{color:var(--brass)}
+
+/* ===== WESTERN – Frontier Ledger, výraznejšia vrstva ===== */
+/* kožený panel so zošitým okrajom */
+[data-style="western"] .tabbar{background-color:#2A1D14;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .06  0 0 0 0 .02  0 0 0 .55 0'/></filter><rect width='160' height='160' filter='url(%23g)'/></svg>"),linear-gradient(180deg,#3E2D20,#26190F)}
+@media (min-width:1000px){
+  [data-style="western"] .tabbar::after{content:"";position:absolute;inset:8px;border:1px dashed rgba(214,174,85,.38);border-radius:3px;pointer-events:none}
+  [data-style="western"] .tabbar{position:relative}
+}
+/* strana: pergamen s tmavšími okrajmi */
+[data-style="western"] .phone{background-image:var(--paper),radial-gradient(ellipse at 50% 30%,transparent 55%,rgba(120,85,40,.16) 100%)}
+/* karty: rám „knihy“ – dvojitá linka (vonkajšia a vnútorná mosadzná) */
+[data-style="western"] .card,[data-style="western"] .mc{background-color:#F8F0DD;border:1px solid #BFA574;border-top:3px solid var(--brass);box-shadow:inset 0 0 0 3px #F8F0DD,inset 0 0 0 4px rgba(184,138,50,.35),0 4px 12px rgba(60,40,15,.12)}
+[data-style="western"] .card .card{box-shadow:none;border:1px solid var(--line);border-top:1px solid var(--line)}
+/* súhrn: hlavička z kože, pod ňou ruled čísla */
+[data-style="western"] .hstats{border:1px solid #BFA574;border-top:4px solid var(--leather);background:#FBF4E2;box-shadow:inset 0 0 0 1px rgba(184,138,50,.3)}
+[data-style="western"] .hstats>div::before{display:none}
+[data-style="western"] .hstats>div.st-inc,[data-style="western"] .hstats>div.st-rest,[data-style="western"] .hstats>div.st-spent{border-left:1px solid #CDB88A;padding:20px 24px}
+[data-style="western"] .hstats span{display:inline-block;padding:3px 9px;margin-bottom:4px;background:var(--leather);color:#E8CE8A;border-radius:2px;font-size:10.5px;letter-spacing:.14em}
+[data-style="western"] .hstats b{font-size:40px;font-weight:700;color:var(--ink);border-bottom:2px solid var(--hc,var(--brass));display:inline-block;padding-bottom:4px;margin:8px 0 6px}
+@media (max-width:999px){[data-style="western"] .hstats b{font-size:21px}[data-style="western"] .hstats span{padding:2px 5px;font-size:9px;letter-spacing:.06em}[data-style="western"] .hstats>div.st-inc,[data-style="western"] .hstats>div.st-rest,[data-style="western"] .hstats>div.st-spent{padding:12px 10px}}
+/* zoznamy ako riadkovaná kniha */
+[data-style="western"] .li,[data-style="western"] .it,[data-style="western"] .cg,[data-style="western"] .bi{border-bottom:1px solid #D2BF93}
+[data-style="western"] .blk>h3{background:linear-gradient(180deg,var(--leather-2),var(--leather));color:#E8CE8A;padding:7px 12px;border-radius:3px 3px 0 0;border-bottom:2px solid var(--brass);margin-bottom:0}
+[data-style="western"] .blk>h3::after{border-bottom:0}
+[data-style="western"] .blk>h3 .small{color:#CDB888}
+/* formulár: výraznejší rám */
+[data-style="western"] .sheet,[data-style="western"] .editor{box-shadow:inset 0 0 0 3px var(--app),inset 0 0 0 4px rgba(184,138,50,.55),0 0 0 2px var(--brass-d),0 16px 40px rgba(20,10,0,.45)}
+[data-style="western"] .sheet>header h2,[data-style="western"] .ed-head h2{font-size:16px}
+[data-style="western"] .hstats span{width:fit-content;max-width:100%}
