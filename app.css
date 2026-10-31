@@ -446,3 +446,20 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .dsort{margin-bottom:10px}
 .donelist{max-height:min(290px,55vh);overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
 .dmore{text-align:center;margin:8px 0 2px}
+
+/* --- termíny a bubliny stavov --- */
+:root{--orange:#C25A0B;--orange-bg:#FCE8D6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--orange:#F59A4A;--orange-bg:#3D2814}}
+:root[data-theme="dark"]{--orange:#F59A4A;--orange-bg:#3D2814}
+.pr-d{min-width:54px;white-space:nowrap}
+.it-top{grid-template-columns:auto minmax(0,1fr) auto auto}
+.pr-d.d-soon{color:var(--orange)}.pr-d.d-late{color:var(--bad)}
+.bubs{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.bub{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.bub.bad{background:var(--bad-bg);color:var(--bad)}
+.bub.orange{background:var(--orange-bg);color:var(--orange)}
+.bub.ok{background:var(--ok-bg);color:var(--ok)}
+.bub.mute{background:var(--surface-2);color:var(--ink-2)}
+.cg-one{padding:0}
+.cg-one .it{padding:10px 0}
+.cg-one .it-top{padding-left:0}

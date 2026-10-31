@@ -313,20 +313,25 @@ function monthLeaves(m){
   });
   return out;
 }
-function itemRow(it,M){
-  const cd=curDay(M),active=M.status==='active',left=it.limit-it.spent,rest=Math.max(0,left),paid=it.limit>0&&rest<.5;
-  let pl='';
-  if(it.day){
-    if(paid)pl=pill({k:'ok',t:'Uhradené',i:'check'});
-    else if(it.spent>0)pl=pill({k:'warn',t:'Zaplatené '+eur(it.spent),i:'alert'});
-    else if(!active)pl=pill({k:'warn',t:'Neuhradené',i:'alert'});
-    else if(it.day<cd)pl=pill({k:'bad',t:'Po termíne',i:'over'});
-    else pl=pill({k:'ok',t:it.day===cd?'Dnes':relDay(it.day-cd),i:'check'});
+function itemState(it,M){
+  const rest=Math.max(0,it.limit-it.spent),paid=it.limit>0&&rest<.5;
+  if(paid)return 'paid';
+  if(it.day&&it.limit>0){
+    const due=new Date(M.y,M.mo,it.day+1),ms=due-new Date();
+    if(ms<=0)return 'late';
+    if(ms<=48*3600*1000)return 'soon';
+    return 'wait';
   }
-  const st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
+  if(it.limit>0&&it.spent>it.limit+.5)return 'over';
+  return 'flex';
+}
+const STL={late:['po termíne','bad'],over:['prekročené','bad'],soon:['do 48 h','orange'],wait:['čaká','mute'],flex:['v limite','mute'],paid:['uhradené','ok']};
+function itemRow(it,M){
+  const left=it.limit-it.spent,stt=itemState(it,M),paid=stt==='paid',st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
   const info=it.limit>0?(left>=0?'zostáva '+eur(left):'prekročené o '+eur(-left)):'bez limitu';
   const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
-  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-d num">'+(it.day?it.day+'.':'·')+'</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b>'+pl+'</div>'+btn+'</div>'+
+  const dcls=stt==='late'?' d-late':stt==='soon'?' d-soon':'';
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-d num'+dcls+'">'+(it.day?it.day+'. '+(M.mo+1)+'.':'')+'</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
    (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
    '<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
 }
@@ -341,12 +346,13 @@ function viewHome(){
    '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
    '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div></section>';
-  const cd0=curDay(M),active0=M.status==='active';
   const groups=CATS.map(c=>{
     const its=lv.filter(x=>x.c.id===c.id);if(!its.length)return '';
-    const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),od=active0?its.filter(x=>x.day&&x.day<cd0&&x.limit>0&&x.limit-x.spent>=.5&&!x.spent).length:0;
-    const open=!!S.openCats[c.id],st=lim>0?status(sp,lim):{k:'ok'};
-    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+c.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><b>'+c.name+'</b><small>'+its.length+(its.length===1?' položka':its.length<5?' položky':' položiek')+(od?' · <span class="neg">po termíne '+od+'</span>':'')+'</small></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+    if(its.length===1)return '<div class="cg cg-one">'+itemRow(its[0],M)+'</div>';
+    const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),open=!!S.openCats[c.id],st=lim>0?status(sp,lim):{k:'ok'};
+    const cnt={};its.forEach(x=>{const k=itemState(x,M);cnt[k]=(cnt[k]||0)+1;});
+    const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
+    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+c.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><b>'+c.name+'</b><span class="bubs">'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
      (lim>0?'<div class="track cg-t" role="img" aria-label="'+c.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
      (open?'<div class="cg-b">'+its.map(x=>itemRow(x,M)).join('')+'</div>':'')+'</div>';
   }).join('');
