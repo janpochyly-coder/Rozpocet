@@ -95,8 +95,41 @@ const IW={
  cactus:'<path d="M12 21V6a2 2 0 0 1 4 0v0M12 21V6a2 2 0 0 0-4 0"/><path d="M12 21V4.500a2 2 0 0 1 4 0V21M5.500 12.500v-2a2 2 0 0 1 4 0v3.500h2.500M18.500 11v-2a2 2 0 0 0-4 0v4.500H12M8 21h8"/>'
 };
 const WMAP={home:'barn',cart:'wagon',car:'wheel',drop:'bottle',shirt:'vest',phone:'telegraph',signal:'telegraph',cash:'sack',trend:'nuggets',archive:'chest',shield:'badge',compass:'wheel',gift:'dynamite',brief:'saddlebag',dots:'horseshoe',bolt:'lantern',utensils:'pan',fuel:'barrel',wrench:'pickaxe',road:'tracks',key:'key2',music:'harmonica',play:'harmonica',chat:'telegram',sparkle:'star',bag:'sack',medical:'bottle',book:'ledger',child:'boot',user:'hat',users:'hat',card:'poster',coin:'coin2',building:'saloon',luggage:'train',star:'star',percent:'church',palette:'scroll',umbrella:'badge',clip:'scroll',grid:'sheriff',pie:'sack',bars:'nuggets',cal:'scroll',file:'scroll'};
-const isWest=()=>document.documentElement.getAttribute('data-style')==='western';
-const ic=(n,s)=>{const w=isWest()&&WMAP[n]&&IW[WMAP[n]];return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
+const IK={
+ castle:'<path d="M3 8h2.5V5.5H8V8h2V5.5h4V8h2V5.5h2.5V8H21v13H3z"/><path d="M10 21v-6a2 2 0 0 1 4 0v6M6.5 12h.01M17.5 12h.01"/>',
+ shield:'<path d="M12 3l7.5 2.5v6.2c0 4.6-3.2 7.8-7.5 9.3-4.3-1.5-7.5-4.7-7.5-9.3V5.5z"/><path d="M12 3v18M4.500 11h15"/>',
+ crown:'<path d="M3.500 18.500l-1-11 5.500 4.500L12 5l4 7 5.500-4.500-1 11z"/><path d="M4 21h16"/>',
+ sword:'<path d="M12 2.500l2 3.500V15h-4V6z"/><path d="M7 15h10M12 15v4.500M10 21.500h4"/>',
+ helm:'<path d="M5.500 21V11a6.500 6.500 0 0 1 13 0v10z"/><path d="M5.500 11.500h13M9 15.500h6M12 11.500V21"/>',
+ scroll:'<path d="M8 4h10.500A1.500 1.500 0 0 1 20 5.500V7H10"/><path d="M8 4a2 2 0 0 0-2 2v11.500A2.500 2.500 0 0 0 8.500 20h8A2.500 2.500 0 0 0 19 17.500V7"/><path d="M10 11h6M10 14.500h4"/>',
+ chalice:'<path d="M6 4h12c0 4-2 6.500-6 6.500S6 8 6 4z"/><path d="M12 10.500V17M8 20.500h8M9 17h6"/>',
+ purse:'<path d="M9 3.200c1.200 1.100 4.800 1.100 6 0l-1.300 3.200c3.400 1.700 5.300 5 5.300 8.600 0 3.600-3 5.800-7 5.800s-7-2.200-7-5.800c0-3.600 1.900-6.900 5.300-8.600z"/><path d="M9.600 6.600h4.800M12 11v7"/>',
+ chest:'<path d="M3.500 11V19h17v-8"/><path d="M3.500 11c0-4 3-6 8.500-6s8.500 2 8.500 6z"/><path d="M3.500 11h17"/><rect x="10" y="10" width="4" height="4.400" rx=".9"/>',
+ torch:'<path d="M10 21l1-9h2l1 9z"/><path d="M12 12c-3-2-3-5 0-9 3 4 3 7 0 9z"/>',
+ anvil:'<path d="M3.500 8.500h13a4 4 0 0 1 4 3.500H14.500L13 14.500H11L9.500 12H3.500z"/><path d="M10 14.500V18M14 14.500V18M7 21h10"/>',
+ potion:'<path d="M10 3h4M10.500 3v5L5 18.500A2 2 0 0 0 6.800 21.500h10.400A2 2 0 0 0 19 18.500L13.500 8V3"/><path d="M8 15h8"/>',
+ tunic:'<path d="M7.500 3L3.500 6v13.500h5.600L12 17l2.900 2.500h5.600V6L16.500 3 14.200 5.500H9.800z"/><path d="M12 8v9"/>',
+ lute:'<circle cx="8.500" cy="15.500" r="5"/><path d="M12 12l7.500-7.500M17.500 3.500l3 3"/><path d="M8.500 13.500v4"/>',
+ seal:'<rect x="3" y="6" width="18" height="12.500" rx="1"/><path d="M3 7l9 6 9-6"/><circle cx="12" cy="14" r="2.500"/>',
+ coin:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6.200"/><path d="M12 8.300v7.400M14.200 10.300c-.4-1.400-4.400-1.400-4.400.4 0 2 4.400 1 4.400 3.100 0 1.800-3.900 1.800-4.500.3"/>',
+ banner:'<path d="M5 21V3"/><path d="M5 4h14l-3 4.500 3 4.500H5"/>',
+ chapel:'<path d="M12 2.500v5M9.500 5h5"/><path d="M6 21v-9l6-4.500 6 4.500v9z"/><path d="M10 21v-5.500h4V21"/>',
+ quill:'<path d="M20 4c-8 0-13 5-14 13l-2 3.500M20 4c0 7-5 11-12 12"/><path d="M9 14l5-5"/>',
+ pawn:'<circle cx="12" cy="6.500" r="3"/><path d="M9 11h6l1.500 6h-9zM6.500 21h11l-1-4h-9z"/>',
+ key:'<circle cx="7.500" cy="12" r="3.600"/><path d="M11 12h10M17.200 12v3M20.400 12v2.400"/>',
+ tower:'<path d="M7 21V8h10v13M6 8V4.500h2V6h2V4.500h4V6h2V4.500h2V8"/><path d="M10 21v-4.500a2 2 0 0 1 4 0V21"/>',
+ tent:'<path d="M3 10l2-6h14l2 6"/><path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12.500V21h14v-8.500M10 21v-5h4v5"/>',
+ horseshoe:'<path d="M6 20.500V11a6 6 0 0 1 12 0v9.500h-3.600V11a2.400 2.400 0 0 0-4.800 0v9.500z"/>',
+ satchel:'<path d="M4 8.500C4 7 5 6 6.500 6h11C19 6 20 7 20 8.500v8.800c0 1.500-1 2.500-2.500 2.500h-11C5 19.800 4 18.800 4 17.300z"/><path d="M4 11.500h16M10 11.500V15h4v-3.500"/>',
+ bridge:'<path d="M3 17h18M5 17v-5a7 7 0 0 1 14 0v5M3 21h18M12 5v7"/>',
+ fleur:'<path d="M12 3c2 3 2 6 0 9-2-3-2-6 0-9z"/><path d="M12 12c-3 0-6-1-7-4 3 0 6 1 7 4zM12 12c3 0 6-1 7-4-3 0-6 1-7 4z"/><path d="M12 12v9M8 17h8"/>',
+ ledger:'<path d="M5 3.500h12.500A1.500 1.500 0 0 1 19 5v14a1.500 1.500 0 0 1-1.500 1.500H5z"/><path d="M5 3.500v17M8.500 8h7M8.500 11.500h7M8.500 15h4"/>'
+};
+const KMAP={home:'castle',cart:'tent',car:'horseshoe',heart:'chapel',drop:'potion',shirt:'tunic',phone:'scroll',signal:'scroll',cash:'purse',trend:'crown',archive:'chest',shield:'shield',compass:'shield',gift:'chalice',brief:'satchel',dots:'fleur',bolt:'torch',utensils:'chalice',fuel:'torch',wrench:'anvil',road:'bridge',key:'key',music:'lute',play:'lute',chat:'seal',sparkle:'crown',bag:'purse',medical:'potion',book:'ledger',child:'pawn',user:'helm',users:'helm',card:'seal',coin:'coin',building:'castle',luggage:'banner',star:'crown',percent:'chapel',palette:'quill',umbrella:'shield',clip:'scroll',grid:'shield',pie:'purse',bars:'tower',cal:'scroll',file:'scroll'};
+const styleName=()=>document.documentElement.getAttribute('data-style')||'';
+const isWest=()=>styleName()==='western';
+const isKnight=()=>styleName()==='knight';
+const ic=(n,s)=>{const st=styleName();const w=st==='western'?(WMAP[n]&&IW[WMAP[n]]):st==='knight'?(KMAP[n]&&IK[KMAP[n]]):null;return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
 
 /* ---------- dátumy ---------- */
 const MN12=['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
@@ -576,7 +609,8 @@ function insights(){
 }
 const MCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F',dlh:'#C4473D',mim:'#5B6B7A'};
 const WCOL={des:'#A23B2A',byv:'#4F6B8A',kon:'#C58B1B',pra:'#7A4E6B',odk:'#5E7A3A',dlh:'#8B2E16',mim:'#5C4A38'};
-const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:MCOL)[k]});
+const KCOL={des:'#8E2A36',byv:'#35557E',kon:'#A9812A',pra:'#5E4778',odk:'#3F6B4A',dlh:'#6E2A2A',mim:'#4A4F5C'};
+const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:isKnight()?KCOL:MCOL)[k]});
 function grpSums(m){const o={};DGRP.forEach(g=>o[g.id]=0);txm(m).forEach(t=>{o[grpOfKey(txKey(t))]+=t.amt;});return o;}
 function grpLims(m){const o={};DGRP.forEach(g=>o[g.id]=0);monthLeaves(m).forEach(x=>{o[grpOfKey(x.key)]+=x.limit;});return o;}
 function stackChart(){
@@ -915,15 +949,15 @@ const $=id=>document.getElementById(id);
 /* ---------- vzhľad: svetlý/tmavý režim a western štýl ---------- */
 function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
 function applyLook(){
-  const r=document.documentElement,t=store.get('rr_theme'),w=store.get('rr_style')==='western';
+  const r=document.documentElement,t=store.get('rr_theme'),st=store.get('rr_style');
   if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
-  if(w)r.setAttribute('data-style','western');else r.removeAttribute('data-style');
-  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',w?'#3A2312':(effTheme()==='dark'?'#0A1118':'#14202E'));
+  if(st==='western'||st==='knight')r.setAttribute('data-style',st);else r.removeAttribute('data-style');
+  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='knight'?'#171A21':(effTheme()==='dark'?'#0A1118':'#14202E'));
 }
 function lookCtl(){
-  const dark=effTheme()==='dark',w=isWest();
+  const dark=effTheme()==='dark',w=isWest(),k=isKnight();
   return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
-   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>';
+   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+'<button type="button" class="lantern" data-act="knightTog" role="switch" aria-checked="'+k+'" aria-label="Rytiersky vzhľad" title="Rytiersky vzhľad (lampáš)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="lt-ring" d="M9.500 4.500V3.500a2.500 2.500 0 0 1 5 0v1"/><path class="lt-body" d="M7.500 6h9l1.200 3v7.500L16.500 20h-9l-1.200-3.500V9z"/><path class="lt-line" d="M6.300 9h11.400M6.300 16.500h11.400M12 6v14"/><path class="lt-flame" d="M12 17.500c-2.200-1.300-2.400-3.500-.8-5.800.6 1 1.100 1.300 1.700 1.400.2-1 .7-1.800 1.300-2.400.9 2.700.5 5.500-2.200 6.800z"/></svg></button>';
 }
 /* preklad do western slovníka (len pri zapnutom western vzhľade) */
 const WDICT={
@@ -944,18 +978,37 @@ const WDICT={
  'Zvyšok':'Zvyšok','Dnes':'Dnes','Včera':'Včera','Zmeniť položku':'Iný zápis',
  'Rozpočet mesiaca':'Mesačná pokladnica','Kam idú peniaze':'Kam odtieká zlato','Plán a skutočnosť':'Sľuby a skutočnosť','Najväčšie položky':'Najväčšie zápisy','Kto platí':'Kto vyplatil','Čo si všimnúť':'Na čo si dať pozor','Grafy':'Grafy','Report':'Správa'
 };
+const KDICT={
+ 'Prehľad':'Nádvorie','Rozpočet':'Pokladnica','Analytika':'Kronika','Plán':'Zbrojnica',
+ 'Rodinný rozpočet':'Rodinný hrad',
+ 'Plánované platby':'Povinné dávky','Vykonané platby':'Zapísané v kronike','Najbližšie platby':'Čoskoro splatné',
+ 'K dispozícii':'V pokladnici','Zostáva uhradiť':'Zostáva odviesť','Minuté':'Minuté zlatky','podľa príjmov':'podľa výnosov','z plánovaných výdavkov':'z povinných dávok','všetko uhradené':'všetko odvedené','v tomto mesiaci':'tento mesiac',
+ 'Po úhradách všetkého ostane':'Po odvedení všetkého ostane',
+ 'Uhradiť':'Odviesť','Pridať':'Zapísať','Pridať zápis':'Nový zápis','Pridať výdavok':'Zapísať výdaj','Pridať príjem':'Zapísať príjem','Nový výdavok':'Nový výdaj','Upraviť výdavok':'Upraviť výdaj','Zobraziť':'Otvoriť',
+ 'Výdavok':'Výdaj','Kto platil':'Kto odviedol','Kategória':'Stav','Položka':'Zápis',
+ 'Desiatky':'Cirkev','Bývanie':'Hrad','Konzum':'Trh','Pravidelné':'Dane','Odkladanie':'Poklad','Dlhy':'Veritelia','Mimoriadne':'Výprava',
+ 'Najnovšie':'Nové','Najstaršie':'Staré','Najvyššia suma':'Najväčšie','Neuhradené':'Neodvedené','Uhradené':'Odvedené','Podľa kategórií':'Podľa stavov','Podľa termínu':'Podľa lehoty',
+ 'Po termíne':'Po lehote','Čaká na termín':'Čaká na lehotu','Mesačné budgety':'Mesačné zásoby','Prekročené budgety':'Prekročené zásoby',
+ 'Aktívny mesiac':'Terajší mesiac','Nasledujúce mesiace':'Ďalšie mesiace','História':'Archív','Výdavky':'Výdaje','Zariadenie':'Stráž',
+ 'Rozpočet mesiaca':'Pokladnica mesiaca','Kam idú peniaze':'Kam plynie zlato','Plán a skutočnosť':'Sľuby a skutočnosť','Najväčšie položky':'Najväčšie zápisy','Kto platí':'Kto odvádza','Čo si všimnúť':'Na čo dať pozor','Report':'Správa'
+};
 const WRX=[
  [/^uhradené (\d+) z (\d+)$/,'vybavené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
 ];
+const KRX=[
+ [/^uhradené (\d+) z (\d+)$/,'odvedené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
+];
+const activeDict=()=>isWest()?[WDICT,WRX]:isKnight()?[KDICT,KRX]:null;
 let wBusy=false;
 function wTr(str){
+  const ad=activeDict();if(!ad)return str;
   const m=str.match(/^(\s*)([\s\S]*?)(\s*)$/);if(!m||!m[2])return str;
-  let t=m[2],r=WDICT[t];
-  if(r===undefined){for(const [rx,rep] of WRX){if(rx.test(t)){r=t.replace(rx,rep);break;}}}
+  let t=m[2],r=ad[0][t];
+  if(r===undefined){for(const [rx,rep] of ad[1]){if(rx.test(t)){r=t.replace(rx,rep);break;}}}
   return r===undefined?str:m[1]+r+m[3];
 }
 function westernize(root){
-  if(!isWest()||wBusy)return;
+  if(!activeDict()||wBusy)return;
   wBusy=true;
   try{
     const wk=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT);let n;
@@ -969,31 +1022,28 @@ function unwesternize(){
   const wk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
   while((n=wk.nextNode())){if(n.__o!==undefined){n.nodeValue=n.__o;n.__o=undefined;}}
 }
-new MutationObserver(ms=>{if(!isWest()||wBusy)return;for(const m of ms){if(m.type==='characterData'){westernize(m.target.parentNode);}else m.addedNodes.forEach(x=>{if(x.nodeType===1)westernize(x);else if(x.nodeType===3&&x.parentNode)westernize(x.parentNode);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});
-/* jemný prechod pri prepnutí vzhľadu (prelínanie) */
+new MutationObserver(ms=>{if(!activeDict()||wBusy)return;for(const m of ms){if(m.type==='characterData'){westernize(m.target.parentNode);}else m.addedNodes.forEach(x=>{if(x.nodeType===1)westernize(x);else if(x.nodeType===3&&x.parentNode)westernize(x.parentNode);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});
+/* prechod pri prepnutí vzhľadu: stmavnutie a opätovné rozsvietenie */
 function swingDoors(cb){
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduce){cb();return;}
-  if(document.startViewTransition){
-    try{document.startViewTransition(()=>{cb();});return;}catch(e){}
-  }
   let d=document.getElementById('fadeov');
-  if(!d){d=document.createElement('div');d.id='fadeov';d.setAttribute('aria-hidden','true');document.body.appendChild(d);}
+  if(!d){d=document.createElement('div');d.id='fadeov';d.className='fadeov';d.setAttribute('aria-hidden','true');document.body.appendChild(d);}
   d.classList.remove('go');void d.offsetWidth;d.classList.add('go');
-  setTimeout(cb,320);
-  setTimeout(()=>{d.classList.remove('go');},900);
+  setTimeout(cb,480);
+  setTimeout(()=>{d.classList.remove('go');},1350);
 }
 let leverBusy=false;
-function toggleWestern(btn){
+function toggleStyle(name,btn){
   if(leverBusy)return;leverBusy=true;
-  const on=store.get('rr_style')!=='western';
+  const on=store.get('rr_style')!==name;
   if(btn){btn.setAttribute('aria-checked',on);}
   swingDoors(()=>{
-    store.set('rr_style',on?'western':'modern');applyLook();
-    if(!on)unwesternize();
+    store.set('rr_style',on?name:'modern');applyLook();
+    unwesternize();
     renderTabs();render(true);if(on)westernize(document.body);
   });
-  setTimeout(()=>{leverBusy=false;},950);
+  setTimeout(()=>{leverBusy=false;},1400);
 }
 function renderTabs(){
   $('tabbar').innerHTML=TABS.map(t=>t?'<button class="tab" data-act="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ic(t[2],22)+t[1]+'</button>':'<button class="fab" data-act="add" aria-label="Pridať výdavok alebo príjem">'+ic('plus',26)+'</button>').join('')+'<div class="sidectl">'+lookCtl()+'</div>';
@@ -1138,7 +1188,8 @@ document.addEventListener('click',e=>{
   else if(a==='idIcon'){idSync();S.idlg.icon=S.idlg.icon===el.dataset.i?'':el.dataset.i;renderIdlg();}
   else if(a==='idDel'){if(window.confirm('Zmazať tento výdavok? Už zadané platby ostanú v histórii.'))saveItemDef(true);}
   else if(a==='themeTog'){store.set('rr_theme',effTheme()==='dark'?'light':'dark');applyLook();renderTabs();render(true);}
-  else if(a==='styleTog'){toggleWestern(el);}
+  else if(a==='styleTog'){toggleStyle('western',el);}
+  else if(a==='knightTog'){toggleStyle('knight',el);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
@@ -1288,7 +1339,7 @@ window.addEventListener('online',poll);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 // kód z odkazu (#k=...) alebo z uloženého zariadenia
 (function init(){
-  applyLook();setTimeout(()=>{if(isWest())westernize(document.body);},0);
+  applyLook();setTimeout(()=>{westernize(document.body);},0);
   const m=/[#&]k=([0-9a-fA-F]{32})/.exec(location.hash);
   if(m){store.set('rr_code',m[1].toLowerCase());try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
   S.code=store.get('rr_code');
