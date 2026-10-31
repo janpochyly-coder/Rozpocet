@@ -87,7 +87,7 @@ const DEFPLAN=[
  {d:20,name:'Podnikanie – VšZP',key:'pod.vszp',amt:120},{d:22,name:'Podnikanie – Rozvoj',key:'pod.rozvoj',amt:50}
 ];
 const S={
-  tab:'home', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
+  tab:'home', openCats:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
   months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
 };
 
@@ -277,11 +277,22 @@ function gradualBlock(m){
   else food=gradRow('Jedlo','celý mesiac',cc.jed,catLimit(CAT.jed,m));
   return '<div class="blk"><h3>Postupné výdavky</h3><section class="card">'+food+gradRow('Drogéria','',cc.dro,catLimit(CAT.dro,m))+gradRow('Nafta','',ss['aut.nafta']||0,getLim(m,'aut.nafta')||0)+'</section></div>';
 }
-function doneBlock(m){
+const DSORT=[['new','Najnovšie'],['old','Najstaršie'],['amt','Najvyššia suma']];
+function doneList(m){
   const M=M_(m),a=mon(new Date(M.y,M.mo,1)),b=addDays(mon(new Date(M.y,M.mo,dim(M))),6);
-  const all=S.tx.filter(t=>t.dt>=a&&t.dt<=b).sort(byDateDesc), shown=S.doneAll?all:all.slice(0,4);
-  return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(a)+' – '+fd(b)+'</span></h3><section class="card">'+(all.length?txRows(shown)+(all.length>4?'<button class="link" data-act="doneAll" aria-expanded="'+S.doneAll+'">'+(S.doneAll?'Zobraziť menej':'Zobraziť všetkých '+all.length)+'</button>':''):'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+'<p class="note" style="margin-top:10px">Mesiac sa na začiatku a na konci dopĺňa na celé týždne.</p></section></div>';
+  const all=S.tx.filter(t=>t.dt>=a&&t.dt<=b);
+  const cmp={new:byDateDesc,old:(x,y)=>x.dt-y.dt||x.id-y.id,amt:(x,y)=>y.amt-x.amt||byDateDesc(x,y)}[S.doneSort||'new'];
+  all.sort(cmp);
+  return {a:a,b:b,all:all,shown:all.slice(0,S.doneN||5)};
 }
+function doneBlock(m){
+  const d=doneList(m),sort=S.doneSort||'new';
+  return '<div class="blk"><h3>Vykonané platby <span class="small num">'+fd(d.a)+' – '+fd(d.b)+'</span></h3><section class="card">'+
+   '<div class="subchips dsort" role="group" aria-label="Zoradenie">'+DSORT.map(x=>'<button type="button" class="sc" data-act="dsort" data-v="'+x[0]+'" aria-pressed="'+(sort===x[0])+'">'+x[1]+'</button>').join('')+'</div>'+
+   (d.all.length?'<div class="donelist" id="donelist" tabindex="0" aria-label="Vykonané platby">'+txRows(d.shown)+'<p class="note dmore" id="dmore">'+(d.shown.length<d.all.length?'Rolovaním zobrazíte ďalšie ('+(d.all.length-d.shown.length)+')':'To je všetko ('+d.all.length+')')+'</p></div>':'<p class="empty">V tomto období zatiaľ žiadna platba.</p>')+
+   '<p class="note" style="margin-top:10px">Mesiac sa na začiatku a na konci dopĺňa na celé týždne.</p></section></div>';
+}
+
 function monthLeaves(m){
   const M=M_(m),ss=bySub(m),cc=byCat(m),out=[],inc=income(m);
   CATS.forEach(c=>{
@@ -330,7 +341,16 @@ function viewHome(){
    '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
    '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div></section>';
-  const A='<div class="blk"><h3>Plánované platby <span class="small num">vyčerpané alebo uhradené '+paidN+' z '+all.length+'</span></h3><section class="card">'+(all.length?all.map(x=>itemRow(x,M)).join(''):'<p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p>')+'</section></div>';
+  const cd0=curDay(M),active0=M.status==='active';
+  const groups=CATS.map(c=>{
+    const its=lv.filter(x=>x.c.id===c.id);if(!its.length)return '';
+    const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),od=active0?its.filter(x=>x.day&&x.day<cd0&&x.limit>0&&x.limit-x.spent>=.5&&!x.spent).length:0;
+    const open=!!S.openCats[c.id],st=lim>0?status(sp,lim):{k:'ok'};
+    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+c.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><b>'+c.name+'</b><small>'+its.length+(its.length===1?' položka':its.length<5?' položky':' položiek')+(od?' · <span class="neg">po termíne '+od+'</span>':'')+'</small></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+     (lim>0?'<div class="track cg-t" role="img" aria-label="'+c.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
+     (open?'<div class="cg-b">'+its.map(x=>itemRow(x,M)).join('')+'</div>':'')+'</div>';
+  }).join('');
+  const A='<div class="blk"><h3>Plánované platby <span class="small num">vyčerpané alebo uhradené '+paidN+' z '+all.length+'</span></h3><section class="card">'+(all.length?groups:'<p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p>')+'</section></div>';
   return head('Prehľad')+hero+'<div class="home2">'+A+doneBlock(m)+'</div>';
 }
 
@@ -680,7 +700,16 @@ function openSheet(mode,pre){
 function closeSheet(){$('sheet').hidden=true;}
 let toastT;
 function toast(msg,err){const t=$('toast');t.className='toast'+(err?' err':'');t.innerHTML=ic(err?'alert':'check',18)+esc(msg);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
-function stepVis(dir){const v=vis(),k=v.indexOf(S.month)+dir;if(k>=0&&k<v.length){S.month=v[k];S.expanded=null;S.doneAll=false;S.upAll=false;S.incAll=false;render(true);}}
+function stepVis(dir){const v=vis(),k=v.indexOf(S.month)+dir;if(k>=0&&k<v.length){S.month=v[k];S.doneN=5;S.expanded=null;S.doneAll=false;S.upAll=false;S.incAll=false;render(true);}}
+
+document.addEventListener('scroll',e=>{
+  const l=e.target;if(!l||l.id!=='donelist')return;
+  if(l.scrollTop+l.clientHeight<l.scrollHeight-24)return;
+  const d=doneList(S.month);if(d.shown.length>=d.all.length)return;
+  S.doneN=(S.doneN||5)+5;const d2=doneList(S.month),top=l.scrollTop;
+  l.innerHTML=txRows(d2.shown)+'<p class="note dmore" id="dmore">'+(d2.shown.length<d2.all.length?'Rolovaním zobrazíte ďalšie ('+(d2.all.length-d2.shown.length)+')':'To je všetko ('+d2.all.length+')')+'</p>';
+  l.scrollTop=top;
+},true);
 
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
@@ -701,6 +730,8 @@ document.addEventListener('click',e=>{
   else if(a==='rep'){S.rep[el.dataset.w]=!S.rep[el.dataset.w];render(true);}
   else if(a==='upAll'){S.upAll=!S.upAll;render(true);}
   else if(a==='doneAll'){S.doneAll=!S.doneAll;render(true);}
+  else if(a==='catTog'){S.openCats[el.dataset.c]=!S.openCats[el.dataset.c];render(true);}
+  else if(a==='dsort'){S.doneSort=el.dataset.v;S.doneN=5;render(true);}
   else if(a==='incAll'){S.incAll=!S.incAll;render(true);}
   else if(a==='repAll'){S.repAll=!S.repAll;render(true);}
   else if(a==='add'){openSheet('exp');}
