@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 const I={
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
  bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
  signal:'<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r=".8"/>',
  utensils:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M18 21V3c-3 1-4 4-4 8h4"/>',
@@ -698,7 +699,7 @@ function viewPlan(){
      '<div class="blk"><h3>Nasledujúce mesiace</h3><div class="mgrid">'+planned.map(i=>monthCard(i,'planned')).join('')+addCard+'</div></div>'+
      '<div class="blk"><h3>História</h3>'+(closed.length?'<div class="mgrid">'+closed.map(i=>monthCard(i,'closed')).join('')+'</div>':'<section class="card"><p class="empty">Zatiaľ žiadny uzavretý mesiac.</p></section>')+'</div>';
   } else if(pt==='vyd') body='<div class="blk"><h3>Výdavky <span class="small">'+itemList().length+' položiek</span></h3>'+itemsBlock()+'</div>';
-  else body='<div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
+  else body='<div class="blk"><h3>Vzhľad</h3><section class="card dev"><p class="small" style="margin:0 0 10px">Svetlý alebo tmavý režim a druhý dizajn aplikácie.</p><div class="lookrow">'+lookCtl()+'</div></section></div><div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
   return '<div class="sh"><h1>Plán</h1></div>'+tabs+'<div class="plan2">'+body+'</div>';
 }
 
@@ -872,8 +873,21 @@ async function doSwitch(){
 /* ---------- shell ---------- */
 const TABS=[['home','Prehľad','grid'],['bud','Rozpočet','pie'],null,['ana','Analytika','bars'],['plan','Plán','cal']];
 const $=id=>document.getElementById(id);
+/* ---------- vzhľad: svetlý/tmavý režim a western štýl ---------- */
+function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+function applyLook(){
+  const r=document.documentElement,t=store.get('rr_theme'),w=store.get('rr_style')==='western';
+  if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
+  if(w)r.setAttribute('data-style','western');else r.removeAttribute('data-style');
+  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',w?'#3A2312':(effTheme()==='dark'?'#0A1118':'#14202E'));
+}
+function lookCtl(){
+  const dark=effTheme()==='dark',w=document.documentElement.getAttribute('data-style')==='western';
+  return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
+   '<button type="button" class="wbtn" data-act="styleTog" aria-pressed="'+w+'">'+ic('star',16)+'<span>'+(w?'Moderný':'Western')+'</span></button>';
+}
 function renderTabs(){
-  $('tabbar').innerHTML=TABS.map(t=>t?'<button class="tab" data-act="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ic(t[2],22)+t[1]+'</button>':'<button class="fab" data-act="add" aria-label="Pridať výdavok alebo príjem">'+ic('plus',26)+'</button>').join('');
+  $('tabbar').innerHTML=TABS.map(t=>t?'<button class="tab" data-act="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ic(t[2],22)+t[1]+'</button>':'<button class="fab" data-act="add" aria-label="Pridať výdavok alebo príjem">'+ic('plus',26)+'</button>').join('')+'<div class="sidectl">'+lookCtl()+'</div>';
 }
 let confirmDisc=false;
 function copyText(t){
@@ -993,6 +1007,8 @@ document.addEventListener('click',e=>{
   else if(a==='idDate'){idSync();S.idlg.dateOn=!S.idlg.dateOn;renderIdlg();}
   else if(a==='idIcon'){idSync();S.idlg.icon=S.idlg.icon===el.dataset.i?'':el.dataset.i;renderIdlg();}
   else if(a==='idDel'){if(window.confirm('Zmazať tento výdavok? Už zadané platby ostanú v histórii.'))saveItemDef(true);}
+  else if(a==='themeTog'){store.set('rr_theme',effTheme()==='dark'?'light':'dark');applyLook();renderTabs();render(true);}
+  else if(a==='styleTog'){store.set('rr_style',store.get('rr_style')==='western'?'modern':'western');applyLook();renderTabs();render(true);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
@@ -1128,6 +1144,7 @@ window.addEventListener('online',poll);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 // kód z odkazu (#k=...) alebo z uloženého zariadenia
 (function init(){
+  applyLook();
   const m=/[#&]k=([0-9a-fA-F]{32})/.exec(location.hash);
   if(m){store.set('rr_code',m[1].toLowerCase());try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
   S.code=store.get('rr_code');
