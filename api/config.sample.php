@@ -4,6 +4,7 @@
 return [
     'driver' => 'mysql',            // 'mysql' (hosting) alebo 'sqlite' (lokálne testy)
     'host'   => 'localhost',
+    // 'port' => 3306,                         // ak hosting používa iný port databázy
     'name'   => 'databaza',
     'user'   => 'pouzivatel',
     'pass'   => 'heslo',

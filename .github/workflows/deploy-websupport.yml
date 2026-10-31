@@ -20,6 +20,7 @@ jobs:
       - name: Create api/config.php from secrets
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
@@ -27,7 +28,7 @@ jobs:
         run: |
           php -r '
             $seed = json_decode(getenv("SEED_DEBTS_JSON") ?: "[]", true);
-            $cfg = ["driver" => "mysql", "host" => getenv("DB_HOST"), "name" => getenv("DB_NAME"), "user" => getenv("DB_USER"), "pass" => getenv("DB_PASS"), "seed_debts" => is_array($seed) ? $seed : []];
+            $cfg = ["driver" => "mysql", "host" => getenv("DB_HOST"), "port" => getenv("DB_PORT") ?: null, "name" => getenv("DB_NAME"), "user" => getenv("DB_USER"), "pass" => getenv("DB_PASS"), "seed_debts" => is_array($seed) ? $seed : []];
             file_put_contents("api/config.php", "<?php\nreturn " . var_export($cfg, true) . ";\n");
           '
           php -l api/config.php

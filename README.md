@@ -28,6 +28,7 @@ Workflow `.github/workflows/deploy-websupport.yml` nahrá súbory cez FTP(S) po 
 | `FTP_PROTOCOL` (voliteľný) | `ftps` (predvolené) alebo `ftp` |
 | `FTP_PORT` (voliteľný) | predvolene 21 |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` | údaje MySQL databázy z administrácie hostingu |
+| `DB_PORT` (voliteľný) | port databázy, ak nie je predvolený |
 | `SEED_DEBTS_JSON` (voliteľný) | počiatočné dlhy pre novú domácnosť, napr. `[{"sub":"id","name":"Názov","balance":1000}]` |
 
 Súbor `api/config.php` sa vytvorí pri nasadení z týchto kľúčov a nie je v gite.
