@@ -44,5 +44,5 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
           # Heslo ide cez argument -u (nie cez skript), aby špeciálne znaky ako ; ' " $ nič nerozbili.
           lftp -p "$SFTP_PORT" -u "$SFTP_USER,$SFTP_PASS" \
-            -e "set sftp:auto-confirm yes; set net:max-retries 2; set net:timeout 20; mkdir -p -f $REMOTE_DIR; mirror -R --verbose --no-perms -X '.git*' -X README.md . $REMOTE_DIR; bye" \
+            -e "set sftp:auto-confirm yes; set net:max-retries 2; set net:timeout 20; mkdir -p -f $REMOTE_DIR; rm -r -f $REMOTE_DIR/.git; rm -r -f $REMOTE_DIR/.github; mirror -R --verbose --no-perms -x '^\.git' -x '^README\.md$' . $REMOTE_DIR; bye" \
             "sftp://$SFTP_HOST"
