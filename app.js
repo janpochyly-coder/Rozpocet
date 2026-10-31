@@ -750,7 +750,7 @@ function viewPlan(){
      '<div class="blk"><h3>Nasledujúce mesiace</h3><div class="mgrid">'+planned.map(i=>monthCard(i,'planned')).join('')+addCard+'</div></div>'+
      '<div class="blk"><h3>História</h3>'+(closed.length?'<div class="mgrid">'+closed.map(i=>monthCard(i,'closed')).join('')+'</div>':'<section class="card"><p class="empty">Zatiaľ žiadny uzavretý mesiac.</p></section>')+'</div>';
   } else if(pt==='vyd') body='<div class="blk"><h3>Výdavky <span class="small">'+itemList().length+' položiek</span></h3>'+itemsBlock()+'</div>';
-  else body='<div class="blk"><h3>Vzhľad</h3><section class="card dev"><p class="small" style="margin:0 0 10px">Vyberte dizajn: vypínač je klasický, páka western a gombík retro. Denný a nočný režim prepnete tlačidlom vpravo hore.</p><div class="lookrow">'+lookCtl()+'</div></section></div><div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
+  else body='<div class="blk"><h3>Vzhľad</h3><section class="card dev"><p class="small" style="margin:0 0 10px">Vyberte dizajn: štvorček s pruhmi je klasický, páka western a gombík retro. Denný a nočný režim prepnete tlačidlom vpravo hore.</p><div class="lookrow">'+lookCtl()+'</div></section></div><div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
   return '<div class="sh"><h1>Plán</h1><div class="sh-r">'+themeBtn()+'</div></div>'+tabs+'<div class="plan2">'+body+'</div>';
 }
 
