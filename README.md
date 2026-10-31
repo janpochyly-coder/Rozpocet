@@ -18,15 +18,14 @@ Rodinná aplikácia na kontrolu rozpočtu pre dvoch (J a I). Beží v prehliada�
 
 ## Nasadenie na Websupport
 
-Workflow `.github/workflows/deploy-websupport.yml` nahrá súbory cez FTP(S) po každom pushi do `main`. Tajné kľúče (Settings > Secrets and variables > Actions):
+Workflow `.github/workflows/deploy-websupport.yml` nahrá súbory cez SFTP (port 22, príkaz `lftp`) po každom pushi do `main`. Tajné kľúče (Settings > Secrets and variables > Actions):
 
 | Kľúč | Význam |
 |---|---|
 | `FTP_SERVER` | adresa FTP servera |
 | `FTP_USERNAME`, `FTP_PASSWORD` | FTP prístup |
 | `FTP_DIR` | cieľový priečinok subdomény na serveri (končí lomkou, napr. `/ucto/`) |
-| `FTP_PROTOCOL` (voliteľný) | `ftps` (predvolené) alebo `ftp` |
-| `FTP_PORT` (voliteľný) | predvolene 21 |
+| `SFTP_PORT` (voliteľný) | predvolene 22 |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` | údaje MySQL databázy z administrácie hostingu |
 | `DB_PORT` (voliteľný) | port databázy, ak nie je predvolený |
 | `SEED_DEBTS_JSON` (voliteľný) | vlastné počiatočné dlhy namiesto predvolených z `api/index.php`, napr. `[{"sub":"id","name":"Názov","balance":1000}]` |
