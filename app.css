@@ -610,3 +610,12 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 .eg-add .subchips{margin-top:6px}
 @media (min-width:1000px){.plan2{max-width:1100px}}
 @media (min-width:1000px){.cols>.plan2{column-span:all}.plan2 .blk>.card{max-width:760px}.plan2 .mc-active{max-width:640px}}
+
+/* --- dialóg výdavku --- */
+#idlg{z-index:9}
+.idd{padding:4px 0}
+.icopick{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.icb{width:100%;aspect-ratio:1;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-2);display:grid;place-items:center;cursor:pointer}
+.icb[aria-pressed="true"]{border-color:var(--gc);color:var(--gc);background:color-mix(in srgb,var(--gc) 12%,var(--surface))}
+.sc.new{border-style:dashed}
+#idlg .sheet{max-height:92%;overflow-y:auto}

@@ -93,7 +93,8 @@ const CATS=[
  {id:'vyl',name:'Výlety',icon:'compass',subs:[]},
  {id:'osl',name:'Oslavy',icon:'gift',subs:[]},
  {id:'pod',name:'Podnikanie',icon:'brief',subs:sb([['vszp','VšZP'],['rozvoj','Rozvoj']])},
- {id:'ost',name:'Ostatné',icon:'dots',kind:'manual',subs:[]}
+ {id:'ost',name:'Ostatné',icon:'dots',kind:'manual',subs:[]},
+ {id:'x',name:'Vlastné',icon:'dots',kind:'custom',subs:[]}
 ];
 const GRP_OF={des:'main',poz:'main',jed:'main',byv:'main',dro:'main',aut:'main',app:'main',dlh:'extra'};
 CATS.forEach(c=>c.grp=GRP_OF[c.id]||'side');
@@ -101,11 +102,11 @@ const GRPS=[['main','Hlavné'],['side','Vedľajšie'],['extra','Mimoriadne']];
 const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 /* zobrazovacie kategórie (neskôr upraviteľné v nastaveniach) */
 const DGRP=[{id:'des',name:'Desiatky'},{id:'byv',name:'Bývanie'},{id:'kon',name:'Konzum'},{id:'pra',name:'Pravidelné'},{id:'odk',name:'Odkladanie'},{id:'dlh',name:'Dlhy'},{id:'mim',name:'Mimoriadne'}];
-const GMAP_CAT={des:'des',byv:'byv',jed:'kon',dro:'kon',obl:'kon',app:'pra',aut:'pra',pod:'pra',odk:'odk',inv:'odk',rez:'odk',poz:'dlh',dlh:'dlh',dov:'mim',vyl:'mim',osl:'mim',ost:'mim'};
+const GMAP_CAT={x:'mim',des:'des',byv:'byv',jed:'kon',dro:'kon',obl:'kon',app:'pra',aut:'pra',pod:'pra',odk:'odk',inv:'odk',rez:'odk',poz:'dlh',dlh:'dlh',dov:'mim',vyl:'mim',osl:'mim',ost:'mim'};
 const GMAP_KEY={'aut.nafta':'kon'};
 const IKEY={'des':'heart','byv.najom':'key','byv.elektrina':'bolt','byv.o2':'signal','aut.nafta':'fuel','aut.servis':'wrench','aut.dialnicna':'road','aut.stk':'clip','aut.poistka':'umbrella','app.adobe':'palette','app.ytb':'play','app.spotify':'music','app.chatgpt':'chat','app.claude':'sparkle','app.shopify':'bag','poz.prima':'card','poz.melon':'coin','dlh.rodicia':'users','dlh.blazka':'user','dlh.brano':'user','dlh.h1':'building','dlh.h2':'building','dlh.realbyt':'building','dlh.orange':'signal','dlh.vszp':'medical','odk.deti':'child','odk.rodicia':'users','rez.r1':'shield','rez.r2':'shield','pod.vszp':'medical','pod.rozvoj':'book','dov':'luggage'};
-const grpOfKey=key=>GMAP_KEY[key]||GMAP_CAT[key.split('.')[0]]||'mim';
-function iconOf(key){if(IKEY[key])return IKEY[key];const p=key.split('.');if(p[0]==='jed')return 'utensils';const c=CAT[p[0]];return c?c.icon:'dots';}
+const grpOfKey=key=>{const d=S.defs&&S.defs[key];if(d&&d.grp)return d.grp;return GMAP_KEY[key]||GMAP_CAT[key.split('.')[0]]||'mim';};
+function iconOf(key){const d=S.defs&&S.defs[key];if(d&&d.icon)return d.icon;if(IKEY[key])return IKEY[key];if(key.indexOf('x.')===0)return GICON[grpOfKey(key)]||'dots';const p=key.split('.');if(p[0]==='jed')return 'utensils';const c=CAT[p[0]];return c?c.icon:'dots';}
 const gIco=(key,sz)=>'<span class="ico gi g-'+grpOfKey(key)+'">'+ic(iconOf(key),sz||18)+'</span>';
 const DEFLIM={'poz.prima':540,'poz.melon':180,'byv.najom':280,'byv.elektrina':50,'byv.o2':200,
  'jed.w0':125,'jed.w1':125,'jed.w2':125,'jed.w3':125,'dro':100,'obl':100,
@@ -121,7 +122,7 @@ const DEFPLAN=[
  {d:20,name:'Podnikanie – VšZP',key:'pod.vszp',amt:120},{d:22,name:'Podnikanie – Rozvoj',key:'pod.rozvoj',amt:50}
 ];
 const S={
-  tab:'home', ptab:'mes', openPCat:{}, openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
+  tab:'home', defs:{}, idlg:null, ptab:'mes', openPCat:{}, openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
   months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
 };
 
@@ -168,6 +169,8 @@ async function loadAll(retry,force){
   const st=await rpc('get_state',{p_code:S.code});
   const sig=JSON.stringify(st);
   if(!force&&S.loaded&&sig===S.sig)return 'same';
+  S.defs={};(st.item_defs||[]).forEach(d=>{S.defs[d.key]={name:d.name,grp:d.grp,budget:d.budget,day:d.day,icon:d.icon,custom:!!d.custom,deleted:!!d.deleted};});
+  CAT.x.subs=Object.keys(S.defs).filter(k=>S.defs[k].custom).map(k=>({id:k.slice(2),name:S.defs[k].name}));
   CAT.dlh.subs=st.debts.map(d=>({id:d.sub,name:d.name,bal:+d.balance,asOf:parseD(d.as_of)}));
   if(!st.months.length){
     if(retry)throw new Error('Prvý mesiac sa nepodarilo vytvoriť');
@@ -185,6 +188,7 @@ async function loadAll(retry,force){
   S.debts=st.debts;
   S.items={};(st.items||[]).forEach(x=>{S.items[x.key]={stav:x.stav===null?null:+x.stav,auto:!!x.auto,asOf:parseD(x.as_of)};});
   CAT.dlh.subs=st.debts.map(d=>({id:d.sub,name:d.name,bal:+d.balance,asOf:parseD(d.as_of)}));
+  Object.keys(S.defs).forEach(k=>{const d=S.defs[k];if(d.custom||!d.name)return;const p=k.split('.');if(p[1]){const sx=CAT[p[0]]&&CAT[p[0]].subs.find(x=>x.id===p[1]);if(sx)sx.name=d.name;}else if(CAT[p[0]]&&!CAT[p[0]].subs.length)CAT[p[0]].name=d.name;});
   let k=keepId?S.months.findIndex(x=>x.id===keepId):-1;
   if(k<0||S.months[k].status==='planned'){k=S.months.findIndex(x=>x.status==='active');if(k<0){const v=vis();k=v.length?v[v.length-1]:0;}}
   S.month=k;S.loaded=true;
@@ -232,9 +236,9 @@ function itemList(){
   CATS.forEach(c=>{
     if(c.kind==='weeks'||c.kind==='manual'||c.kind==='tithe')return;
     if(c.subs.length)c.subs.forEach(x=>out.push({key:c.id+'.'+x.id,cat:c,name:x.name,debt:c.kind==='debt',sub:x}));
-    else out.push({key:c.id,cat:c,name:c.name,debt:false});
+    else if(c.kind!=='custom')out.push({key:c.id,cat:c,name:c.name,debt:false});
   });
-  return out;
+  return out.filter(it=>!(S.defs[it.key]&&S.defs[it.key].deleted));
 }
 function itemStav(it){
   if(it.debt)return{tracked:true,value:debtBal(it.sub),auto:true};
@@ -336,6 +340,7 @@ function monthLeaves(m){
       c.subs.forEach((x,k)=>{
         const key=c.id+'.'+x.id,l=getLim(m,key),sp=ss[key]||0;
         if(!isIn(m,key)&&!sp)return;
+        if(S.defs[key]&&S.defs[key].deleted&&!sp)return;
         const w=c.kind==='weeks'?weekInfo(m,k):null;
         out.push({key:key,c:c,name:w?'Jedlo · týždeň '+w.n:x.name,sub:w?w.range:c.name,limit:l||0,spent:sp,day:c.kind==='weeks'?null:payDayOf(m,key),pre:{cat:c.id,sub:c.kind==='weeks'?'':x.id}});
       });
@@ -609,20 +614,20 @@ function itemsBlock(){
       const c=it.cat,v=itemStav(it),op=S.itemOpen===it.key;
       let panel='';
       if(op){
-        if(it.debt)panel='<div class="ip"><p class="small" style="margin:0">Zostatok dlhu '+eur(v.value)+'. Každá splátka, ktorú pridáte, ho zníži automaticky.</p></div>';
+        if(it.debt)panel='<div class="ip"><p class="small" style="margin:0">Zostatok dlhu '+eur(v.value)+'. Každá splátka, ktorú pridáte, ho zníži automaticky.</p><div class="btns"><button type="button" class="btn ghost sm" data-act="idEdit" data-key="'+it.key+'">Upraviť názov, kategóriu, budget, dátum</button></div></div>';
         else{
           const x=S.items[it.key]||{stav:null,auto:false};
           panel='<div class="ip"><label class="fld2" for="i-stav">Stav (€)<input id="i-stav" class="num-in" type="text" inputmode="decimal" value="'+(x.stav===null?'':x.stav)+'" placeholder="bez stavu"></label>'+
             '<label class="chk" for="i-auto"><input id="i-auto" type="checkbox"'+(x.auto?' checked':'')+'> Automaticky odrátavať, keď sa pridá výdavok z tejto položky</label>'+
             '<p class="note" style="margin:0">Zapnuté: stav sa zníži o každý výdavok pridaný od dnešného dňa. Bez stavu sa nič nesleduje.</p>'+
-            '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button></div></div>';
+            '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button><button type="button" class="btn ghost sm" data-act="idEdit" data-key="'+it.key+'">Upraviť názov, kategóriu, budget, dátum</button></div></div>';
         }
       }
       return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+op+'">'+gIco(it.key,16)+'<span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
     }).join(''):'';
     return '<div class="pc g-'+g.id+'"><button type="button" class="pc-h" data-act="pcat" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi">'+ic(GICON[g.id],18)+'</span><span class="pc-n"><b>'+g.name+'</b><small>'+list.length+(list.length===1?' položka':list.length<5?' položky':' položiek')+(tracked?' · '+tracked+' so stavom':'')+'</small></span></button>'+(open?'<div class="pc-b">'+rows+'</div>':'')+'</div>';
   }).join('');
-  return '<section class="card"><p class="small" style="margin:0 0 8px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore mesiaca.</p>'+groups+'</section>';
+  return '<section class="card"><button type="button" class="btn" style="width:100%;margin-bottom:12px" data-act="idNew">+ Nový výdavok</button><p class="small" style="margin:0 0 8px">Zoznam všetkých výdavkov. Pri niektorých sledujete aktuálny stav. Položky z neho pridáte do mesiaca v editore mesiaca.</p>'+groups+'</section>';
 }
 async function saveItem(){
   const key=S.itemOpen;if(!key)return;
@@ -671,6 +676,56 @@ function viewPlan(){
   } else if(pt==='vyd') body='<div class="blk"><h3>Výdavky <span class="small">'+itemList().length+' položiek</span></h3>'+itemsBlock()+'</div>';
   else body='<div class="blk"><h3>Zariadenie a zdieľanie</h3>'+householdBlock()+'</div>';
   return '<div class="sh"><h1>Plán</h1></div>'+tabs+'<div class="plan2">'+body+'</div>';
+}
+
+/* ---------- dialóg výdavku (názov, kategória, budget, dátum) ---------- */
+const ICON_PICK=['home','cart','car','heart','drop','shirt','phone','cash','sun','trend','archive','shield','compass','gift','brief','bolt','utensils','fuel','wrench','key','music','play','chat','bag','book','child','users','card','coin','luggage','star','building','palette','signal','umbrella','road','clip','sparkle','medical','percent'];
+function openItemDlg(o){
+  let d;
+  if(o.key){
+    const it=itemList().find(x=>x.key===o.key),df=S.defs[o.key]||{},dp=DEFPLAN.find(p=>p.key===o.key);
+    const day=df.day||(dp&&!df.name&&df.day!==null?dp.d:null);
+    d={key:o.key,name:df.name||(it?it.name:''),grp:grpOfKey(o.key),budget:df.budget!==undefined&&df.budget!==null?df.budget:(DEFLIM[o.key]!==undefined?DEFLIM[o.key]:null),dateOn:!!day,day:day||1,icon:df.icon||'',custom:o.key.indexOf('x.')===0};
+  } else d={key:null,name:'',grp:o.grp||'kon',budget:null,dateOn:false,day:1,icon:'',custom:true};
+  d.add=!!o.add;S.idlg=d;renderIdlg();$('idlg').hidden=false;setTimeout(()=>{const n=$('id-name');if(n)n.focus();},30);
+}
+function idSync(){
+  const d=S.idlg;if(!d||!$('id-name'))return;
+  d.name=$('id-name').value;d.budgetTxt=$('id-bud').value;
+  if($('id-day'))d.day=$('id-day').value;
+}
+function renderIdlg(){
+  const d=S.idlg;if(!d)return;
+  const bud=d.budgetTxt!==undefined?d.budgetTxt:(d.budget===null?'':String(d.budget).replace('.',','));
+  $('idlg').innerHTML='<form class="sheet" id="iform" novalidate aria-label="Výdavok"><header><h2>'+(d.key?'Upraviť výdavok':'Nový výdavok')+'</h2><button type="button" class="x" data-act="idClose" aria-label="Zavrieť">'+ic('x',18)+'</button></header>'+
+   '<label class="fld" for="id-name">Názov<input id="id-name" type="text" maxlength="60" autocomplete="off" placeholder="Napr. Telocvičňa" value="'+esc(d.name)+'"></label>'+
+   '<div><div class="sec-t" style="margin-bottom:8px">Kategória</div><div class="subchips">'+DGRP.map(g=>'<button type="button" class="sc" data-act="idGrp" data-g="'+g.id+'" aria-pressed="'+(d.grp===g.id)+'">'+g.name+'</button>').join('')+'</div></div>'+
+   '<label class="fld" for="id-bud">Budget (€ na mesiac)<input id="id-bud" type="text" inputmode="decimal" autocomplete="off" placeholder="bez budgetu" value="'+esc(bud)+'"></label>'+
+   '<div class="dt idd"><button type="button" class="switch sm" role="switch" aria-checked="'+d.dateOn+'" data-act="idDate" aria-label="Dátum platby"></button><span>Dátum platby</span>'+(d.dateOn?'<label class="dtl" for="id-day">Deň v mesiaci<input class="num-in sm" id="id-day" type="text" inputmode="numeric" value="'+esc(d.day)+'"></label>':'<span class="small">vypnutý</span>')+'</div>'+
+   '<div><div class="sec-t" style="margin-bottom:8px">Ikonka</div><div class="icopick">'+ICON_PICK.map(n=>'<button type="button" class="icb g-'+d.grp+'" data-act="idIcon" data-i="'+n+'" aria-pressed="'+((d.icon||GICON[d.grp])===n||(d.icon===''&&false))+'" aria-label="'+n+'">'+ic(n,18)+'</button>').join('')+'</div></div>'+
+   '<div class="msg bad" id="id-msg" role="alert"></div>'+
+   '<button class="btn" type="submit">Uložiť</button>'+(d.key&&d.custom?'<button type="button" class="btn ghost" data-act="idDel">Zmazať výdavok</button>':'')+'</form>';
+}
+function closeIdlg(){S.idlg=null;$('idlg').hidden=true;$('idlg').innerHTML='';}
+async function saveItemDef(del){
+  idSync();const d=S.idlg;if(!d)return;
+  const msg=t=>{const m=$('id-msg');if(m)m.textContent=t;};
+  const name=d.name.trim();if(!name&&!del){msg('Zadajte názov.');return;}
+  let budget=null;const bt=(d.budgetTxt||'').trim();
+  if(bt!==''){budget=parseFloat(bt.replace(/\s/g,'').replace(',','.'));if(!isFinite(budget)||budget<0){msg('Budget musí byť číslo.');return;}}
+  let day=null;if(d.dateOn){day=parseInt(d.day,10);if(!(day>=1&&day<=31)){msg('Deň musí byť od 1 do 31.');return;}}
+  S.busy++;
+  try{
+    const key=await rpc('save_item_def',{p_code:S.code,p_key:d.key,p_name:name||d.name,p_grp:d.grp,p_budget:budget,p_day:day,p_icon:d.icon||null,p_deleted:!!del});
+    await loadAll(false,true);
+    if(E){
+      if(del){delete E.draft.lim[key];delete E.draft.dates[key];}
+      else if(d.add){E.draft.lim[key]=budget;if(day)E.draft.dates[key]=day;}
+    }
+    closeIdlg();render(true);if(E)renderEditor(true);
+    toast(del?'Výdavok zmazaný':'Výdavok uložený');
+  }catch(err){console.error(err);msg('Nepodarilo sa uložiť. Skúste to znova.');}
+  finally{S.busy--;}
 }
 
 /* ---------- editor mesiaca ---------- */
@@ -740,8 +795,7 @@ function renderEditor(keep){
   });
   const groups=DGRP.map(g=>{
     const es=entries.filter(e=>grpOfKey(e.key)===g.id),av=itemList().filter(it=>grpOfKey(it.key)===g.id&&!inLim(it.key));
-    if(!es.length&&!av.length)return '';
-    const add=av.length?'<div class="eg-add"><span class="small">Pridať do mesiaca</span><div class="subchips">'+av.map(it=>{const c=it.cat,sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div></div>':'';
+    const add='<div class="eg-add"><span class="small">Pridať do mesiaca</span><div class="subchips">'+av.map(it=>{const c=it.cat,sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'<button type="button" class="sc new" data-act="idNew" data-g="'+g.id+'" data-add="1">+ Nový výdavok</button></div></div>';
     return '<section class="card eg2 g-'+g.id+'"><div class="eg2-h"><span class="ico gi">'+ic(GICON[g.id],18)+'</span><h3>'+g.name+'</h3><b class="num" data-sum="g.'+g.id+'">'+eur(m.g[g.id]||0)+'</b></div>'+(es.length?es.map(e=>e.html).join(''):'<p class="small" style="margin:6px 0">Zatiaľ bez položiek v tomto mesiaci.</p>')+add+'</section>';
   }).join('');
   const d=m.inc-m.tot;
@@ -867,6 +921,7 @@ document.addEventListener('scroll',e=>{
   l.scrollTop=top;
 },true);
 
+document.addEventListener('submit',e=>{if(e.target&&e.target.id==='iform'){e.preventDefault();saveItemDef(false);}});
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const a=el.dataset.act;
@@ -886,6 +941,13 @@ document.addEventListener('click',e=>{
   else if(a==='rep'){S.rep[el.dataset.w]=!S.rep[el.dataset.w];render(true);}
   else if(a==='upAll'){S.upAll=!S.upAll;render(true);}
   else if(a==='doneAll'){S.doneAll=!S.doneAll;render(true);}
+  else if(a==='idNew'){openItemDlg({grp:el.dataset.g,add:!!el.dataset.add});}
+  else if(a==='idEdit'){openItemDlg({key:el.dataset.key});}
+  else if(a==='idClose'){closeIdlg();}
+  else if(a==='idGrp'){idSync();S.idlg.grp=el.dataset.g;renderIdlg();}
+  else if(a==='idDate'){idSync();S.idlg.dateOn=!S.idlg.dateOn;renderIdlg();}
+  else if(a==='idIcon'){idSync();S.idlg.icon=S.idlg.icon===el.dataset.i?'':el.dataset.i;renderIdlg();}
+  else if(a==='idDel'){if(window.confirm('Zmazať tento výdavok? Už zadané platby ostanú v histórii.'))saveItemDef(true);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
@@ -915,12 +977,12 @@ document.addEventListener('click',e=>{
   else if(a==='edSave'){saveEditor();}
   else if(a==='itemOpen'){S.itemOpen=S.itemOpen===el.dataset.key?null:el.dataset.key;render(true);}
   else if(a==='itemSave'){saveItem();}
-  else if(a==='itemOn'){E.draft.lim[el.dataset.key]=null;renderEditor(true);}
+  else if(a==='itemOn'){const k=el.dataset.key,df=S.defs[k]||{};E.draft.lim[k]=df.budget!==undefined&&df.budget!==null?df.budget:(DEFLIM[k]!==undefined?DEFLIM[k]:null);if(df.day)E.draft.dates[k]=df.day;renderEditor(true);}
   else if(a==='itemOff'){delete E.draft.lim[el.dataset.key];delete E.draft.dates[el.dataset.key];renderEditor(true);}
   else if(a==='dateToggle'){const k=el.dataset.key,dd=E.draft.dates;if(dd[k]===undefined)dd[k]=1;else delete dd[k];renderEditor(true);}
 });
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('sheet').hidden)closeSheet();else if(E){E=null;$('editor').hidden=true;}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.idlg)closeIdlg();else if(!$('sheet').hidden)closeSheet();else if(E){E=null;$('editor').hidden=true;}}});
 $('amt').addEventListener('input',()=>{$('save').disabled=!parseAmt();});
 $('date').addEventListener('change',renderSheet);
 $('editor').addEventListener('input',edInput);
@@ -1007,7 +1069,7 @@ async function boot(){
   }
 }
 async function poll(){
-  if(document.hidden||!S.loaded||S.busy>0||S.itemOpen||!$('sheet').hidden||!$('editor').hidden)return;
+  if(document.hidden||!S.loaded||S.busy>0||S.itemOpen||!$('sheet').hidden||!$('editor').hidden||S.idlg)return;
   try{const r=await loadAll();if(r==='ok')render(true);}catch(e){console.error(e);}
 }
 setInterval(poll,15000);

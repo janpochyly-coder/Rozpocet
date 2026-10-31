@@ -47,9 +47,15 @@ function db(): PDO {
     return $pdo;
 }
 
+function ensure_item_defs(PDO $pdo): void {
+    try { $pdo->query('SELECT 1 FROM item_defs LIMIT 1'); return; } catch (Throwable $e) { /* vytvoríme */ }
+    $sfx = is_mysql() ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' : '';
+    $pdo->exec("CREATE TABLE IF NOT EXISTS item_defs (household_id CHAR(36) NOT NULL, item_key VARCHAR(64) NOT NULL, name VARCHAR(100) NOT NULL, grp VARCHAR(8) NOT NULL, budget DECIMAL(12,2) NULL, day INT NULL, icon VARCHAR(16) NULL, custom TINYINT NOT NULL DEFAULT 0, deleted TINYINT NOT NULL DEFAULT 0, PRIMARY KEY (household_id, item_key), FOREIGN KEY (household_id) REFERENCES households(id) ON DELETE CASCADE)$sfx");
+}
+
 function ensure_schema(PDO $pdo): void {
     // Rýchla kontrola, či tabuľky už existujú.
-    try { $pdo->query('SELECT 1 FROM households LIMIT 1'); return; } catch (Throwable $e) { /* vytvoríme */ }
+    try { $pdo->query('SELECT 1 FROM households LIMIT 1'); ensure_item_defs($pdo); return; } catch (Throwable $e) { /* vytvoríme */ }
     $sfx = is_mysql() ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' : '';
     $stmts = [
         "CREATE TABLE IF NOT EXISTS households (id CHAR(36) PRIMARY KEY, access_code VARCHAR(64) NOT NULL UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)$sfx",
@@ -63,6 +69,7 @@ function ensure_schema(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS throttle (ip VARCHAR(64) NOT NULL, bucket VARCHAR(16) NOT NULL, ts BIGINT NOT NULL)$sfx",
     ];
     foreach ($stmts as $s) { $pdo->exec($s); }
+    ensure_item_defs($pdo);
     foreach (['CREATE INDEX idx_tx_hh ON transactions (household_id, dt)',
               'CREATE INDEX idx_inc_hh ON incomes (household_id, dt)',
               'CREATE INDEX idx_throttle ON throttle (ip, bucket, ts)'] as $ix) {

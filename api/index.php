@@ -106,7 +106,9 @@ $FN['get_state'] = function (array $a) {
         all('SELECT sub, name, balance, as_of FROM debts WHERE household_id = ? ORDER BY sub', [$hid]));
     $items = array_map(fn($i) => ['key' => $i['item_key'], 'stav' => f($i['stav']), 'auto' => (bool)$i['auto'], 'as_of' => $i['as_of']],
         all('SELECT item_key, stav, auto, as_of FROM items WHERE household_id = ?', [$hid]));
-    return ['months' => $months, 'limits' => $limits, 'plans' => $plans, 'transactions' => $tx, 'incomes' => $inc, 'debts' => $debts, 'items' => $items];
+    $defs = array_map(fn($x) => ['key' => $x['item_key'], 'name' => $x['name'], 'grp' => $x['grp'], 'budget' => f($x['budget']), 'day' => $x['day'] === null ? null : (int)$x['day'], 'icon' => $x['icon'], 'custom' => (bool)$x['custom'], 'deleted' => (bool)$x['deleted']],
+        all('SELECT item_key, name, grp, budget, day, icon, custom, deleted FROM item_defs WHERE household_id = ?', [$hid]));
+    return ['months' => $months, 'limits' => $limits, 'plans' => $plans, 'transactions' => $tx, 'incomes' => $inc, 'debts' => $debts, 'items' => $items, 'item_defs' => $defs];
 };
 
 $FN['add_transaction'] = function (array $a) {
@@ -152,6 +154,28 @@ $FN['set_item'] = function (array $a) {
     if ($old && (float)$old['stav'] === (float)$stav && ($old['stav'] === null) === ($stav === null) && (int)$old['auto'] === $auto) { $asOf = $old['as_of']; }
     upsert('items', ['household_id' => $hid, 'item_key' => $key, 'stav' => $stav, 'auto' => $auto, 'as_of' => $asOf], ['household_id', 'item_key']);
     return null;
+};
+
+$FN['save_item_def'] = function (array $a) {
+    $hid = need_hh($a['p_code'] ?? '');
+    $key = txt($a['p_key'] ?? '', 64);
+    $custom = 0;
+    if ($key === '') { $key = 'x.' . substr(bin2hex(random_bytes(6)), 0, 10); $custom = 1; }
+    elseif (strncmp($key, 'x.', 2) === 0) { if (!preg_match('/^x\.[a-z0-9]{4,12}$/', $key)) { fail(400, 'invalid key'); } $custom = 1; }
+    elseif (!preg_match('/^[a-z0-9]{2,8}(\.[a-z0-9]{1,16})?$/', $key)) { fail(400, 'invalid key'); }
+    $name = trim(txt($a['p_name'] ?? '', 60));
+    if ($name === '') { fail(400, 'invalid name'); }
+    $grp = (string)($a['p_grp'] ?? '');
+    if (!in_array($grp, ['des', 'byv', 'kon', 'pra', 'odk', 'dlh', 'mim'], true)) { fail(400, 'invalid group'); }
+    $budget = num($a['p_budget'] ?? null, true);
+    if ($budget !== null && $budget < 0) { fail(400, 'invalid budget'); }
+    $day = isset($a['p_day']) && $a['p_day'] !== null && $a['p_day'] !== '' ? (int)$a['p_day'] : null;
+    if ($day !== null && ($day < 1 || $day > 31)) { fail(400, 'invalid day'); }
+    $icon = isset($a['p_icon']) && $a['p_icon'] !== null && $a['p_icon'] !== '' ? (string)$a['p_icon'] : null;
+    if ($icon !== null && !preg_match('/^[a-z]{2,16}$/', $icon)) { fail(400, 'invalid icon'); }
+    $deleted = !empty($a['p_deleted']) ? 1 : 0;
+    upsert('item_defs', ['household_id' => $hid, 'item_key' => $key, 'name' => $name, 'grp' => $grp, 'budget' => $budget, 'day' => $day, 'icon' => $icon, 'custom' => $custom, 'deleted' => $deleted], ['household_id', 'item_key']);
+    return $key;
 };
 
 $FN['save_month'] = function (array $a) {
