@@ -331,7 +331,7 @@ function itemRow(it,M){
   const info=it.limit>0?(left>=0?'zostáva '+eur(left):'prekročené o '+eur(-left)):'bez limitu';
   const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
   const dcls=stt==='late'?' d-late':stt==='soon'?' d-soon':'';
-  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-d num'+dcls+'">'+(it.day?it.day+'. '+(M.mo+1)+'.':'')+'</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-n"><div class="nl"><b>'+esc(it.name)+'</b>'+(it.day?'<span class="bub '+(stt==='late'?'bad':stt==='soon'?'orange':'mute')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</div><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
    (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
    '<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
 }
@@ -352,7 +352,7 @@ function viewHome(){
     const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),open=!!S.openCats[c.id],st=lim>0?status(sp,lim):{k:'ok'};
     const cnt={};its.forEach(x=>{const k=itemState(x,M);cnt[k]=(cnt[k]||0)+1;});
     const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
-    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+c.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><b>'+c.name+'</b><span class="bubs">'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+c.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><span class="nl"><b>'+c.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
      (lim>0?'<div class="track cg-t" role="img" aria-label="'+c.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
      (open?'<div class="cg-b">'+its.map(x=>itemRow(x,M)).join('')+'</div>':'')+'</div>';
   }).join('');
