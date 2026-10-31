@@ -384,12 +384,12 @@ function viewHome(){
   const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
   const rest=sum(lv.map(x=>Math.max(0,x.limit-x.spent))),free=inc-spent-rest;
   const st0=lv.map(x=>({x:x,s:itemState(x,M)})),paidN=st0.filter(o=>o.s==='paid').length;
-  const nextUp=st0.filter(o=>o.x.day&&(o.s==='late'||o.s==='soon'||o.s==='wait')).sort((a,b)=>(a.s==='late'?0:1)-(b.s==='late'?0:1)||a.x.day-b.x.day).slice(0,4);
+  const nextUp=st0.filter(o=>o.x.day&&(o.s==='late'||o.s==='soon'||o.s==='wait')).sort((a,b)=>(a.s==='late'?0:1)-(b.s==='late'?0:1)||a.x.day-b.x.day).slice(0,5);
   const nextHtml=nextUp.length&&M.status!=='planned'?'<div class="nextup"><span class="small">Najbližšie platby</span><div class="nu-l">'+nextUp.map(o=>'<button type="button" class="nu g-'+grpOfKey(o.x.key)+'" data-act="addFor" data-key="'+o.x.key+'"><span class="ico gi">'+ic(iconOf(o.x.key),16)+'</span><span class="nu-t"><b>'+esc(o.x.name)+'</b><small class="'+(o.s==='late'?'d-late':o.s==='soon'?'d-soon':'')+'">'+o.x.day+'. '+(M.mo+1)+'. · '+eur(Math.max(0,o.x.limit-o.x.spent))+'</small></span></button>').join('')+'</div></div>':'';
   const hero='<section class="card hero"><div class="hstats big3">'+
-   '<div><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
-   '<div><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
-   '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
+   '<div class="st-inc"><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
+   '<div class="st-rest"><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
+   '<div class="st-spent"><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
    '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div>'+nextHtml+'</section>';
   const pv=S.pview==='date'?'date':'cat',pf=S.pfilt||'all';
@@ -401,8 +401,9 @@ function viewHome(){
       const its=all.filter(pass);if(!its.length)return '';
       const sp=sum(all.map(o=>o.x.spent)),lim=sum(all.map(o=>o.x.limit)),open=!!S.openCats[g.id],st=lim>0?status(sp,lim):{k:'ok'};
       const cnt={};all.forEach(o=>{cnt[o.s]=(cnt[o.s]||0)+1;});
-      const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
-      return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi g-'+g.id+'">'+ic(GICON[g.id]||'dots',18)+'</span><span class="cg-n"><span class="nl"><b>'+g.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+      const CST={late:['po termíne','late'],over:['prekročené','late'],soon:['v termíne','soon'],wait:['pred termínom','']};
+      const bub=['late','over','soon','wait'].filter(k=>cnt[k]).map(k=>'<span class="dtx '+CST[k][1]+'">'+cnt[k]+' '+CST[k][0]+'</span>').join(' · ');
+      return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi g-'+g.id+'">'+ic(GICON[g.id]||'dots',18)+'</span><span class="cg-n"><b>'+g.name+'</b><span class="cg-s">'+(bub||'&nbsp;')+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
        (lim>0?'<div class="track cg-t" role="img" aria-label="'+g.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
        (open?'<div class="cg-b">'+its.map(o=>itemRow(o.x,M,'cat')).join('')+'</div>':'')+'</div>';
     }).join('');
@@ -412,7 +413,7 @@ function viewHome(){
       const its=st0.filter(o=>o.s===bk[0]&&pass(o));if(!its.length)return '';
       its.sort((a,b)=>(a.x.day||99)-(b.x.day||99));
       const amt=bk[0]==='paid'?sum(its.map(o=>o.x.spent)):sum(its.map(o=>Math.max(0,o.x.limit-o.x.spent)));
-      return '<div class="dg"><div class="dg-h"><span class="bub '+bk[2]+'">'+bk[1]+'</span><span class="small">'+its.length+' · '+(bk[0]==='paid'?'zaplatené ':'zostáva ')+'<b class="num">'+eur(amt)+'</b></span></div>'+its.map(o=>itemRow(o.x,M,'date')).join('')+'</div>';
+      return '<div class="dg"><div class="dg-h"><b class="dgt '+bk[2]+'">'+bk[1]+'</b><span class="small">'+its.length+' · '+(bk[0]==='paid'?'zaplatené ':'zostáva ')+'<b class="num">'+eur(amt)+'</b></span></div>'+its.map(o=>itemRow(o.x,M,'date')).join('')+'</div>';
     }).join('');
   }
   const ctl='<div class="pctl"><div class="seg" role="group" aria-label="Zobrazenie">'+[['cat','Podľa kategórií'],['date','Podľa termínu']].map(x=>'<button data-act="pview" data-v="'+x[0]+'" aria-pressed="'+(pv===x[0])+'">'+x[1]+'</button>').join('')+'</div>'+
@@ -928,14 +929,16 @@ function updSinfo(){
   el.innerHTML='<span class="small">Budget · zostáva <b class="num">'+eur(rest)+'</b>'+(amt?' → po zápise <b class="num '+(after>=0?'pos':'neg')+'">'+eur(after)+'</b>':'')+'</span>'+(rest>0&&Math.abs(amt-rest)>.004?'<button type="button" class="sc" data-act="sfill" data-v="'+rest+'">Zvyšok '+eur(rest)+'</button>':'');
 }
 function renderSheet(){
-  const inc=S.mode==='inc';
-  $('stitle').textContent=inc?'Nový príjem':'Nový výdavok';$('save').textContent=inc?'Pridať príjem':'Pridať výdavok';
+  const inc=S.mode==='inc',fx=!inc&&S.draft.fixed&&S.draft.key;
+  $('stitle').textContent=inc?'Nový príjem':(fx?keyName(S.draft.key):'Nový výdavok');$('save').textContent=inc?'Pridať príjem':'Pridať výdavok';
   $('m-exp').setAttribute('aria-pressed',!inc);$('m-inc').setAttribute('aria-pressed',inc);
-  $('catwrap').hidden=inc;$('wholbl').textContent=inc?'Kto dostal':'Kto platil';$('note').placeholder=inc?'Napr. Výplata':'Napr. Lidl';
+  const ms=document.querySelector('#form>.seg');if(ms)ms.hidden=!!fx;
+  $('catwrap').hidden=inc||!!fx;$('wholbl').textContent=inc?'Kto dostal':'Kto platil';$('note').placeholder=inc?'Napr. Výplata':'Napr. Lidl';
   $('chips').innerHTML='<div class="stiles">'+DGRP.map(g=>'<button type="button" class="stile g-'+g.id+'" data-act="sgrp" data-g="'+g.id+'" aria-pressed="'+(S.draft.grp===g.id)+'"><span class="ico gi">'+ic(GICON[g.id],18)+'</span><span>'+g.name+'</span></button>').join('')+'</div>';
   $('whoseg').innerHTML=['J','I'].map(w=>'<button type="button" data-act="who" data-w="'+w+'" aria-pressed="'+(S.draft.who===w)+'">'+dot(w,true)+PEOPLE[w]+'</button>').join('');
   const sw=$('subwrap');
   if(inc){sw.innerHTML='<div class="subchips">'+['Výplata','Odmena','Iný príjem'].map(n=>'<button type="button" class="sc" data-act="preset" data-n="'+n+'">'+n+'</button>').join('')+'</div>';updSinfo();updSave();return;}
+  if(fx){sw.innerHTML='<div class="fxit g-'+grpOfKey(S.draft.key)+'">'+gIco(S.draft.key)+'<span class="sit-n"><b>'+esc(keyName(S.draft.key))+'</b><small>'+esc(CATS.length&&CAT[S.draft.key.split('.')[0]]&&CAT[S.draft.key.split('.')[0]].name!==keyName(S.draft.key)?CAT[S.draft.key.split('.')[0]].name:DGRP.find(g=>g.id===grpOfKey(S.draft.key)).name)+'</small></span><button type="button" class="link" data-act="sfree">Zmeniť položku</button></div>';updSinfo();updSave();return;}
   const its=sheetKeys(S.draft.grp);
   sw.innerHTML='<div class="sec-t" style="margin-bottom:8px">Položka</div><div class="sitems">'+(its.length?its.map(it=>{
     const r=sheetRem(it.key),info=r.in?(r.limit>0?'zostáva '+eur(r.limit-r.spent)+' z '+eur(r.limit):'bez limitu'):'mimo plánu mesiaca',c=it.cat;
@@ -946,7 +949,7 @@ function renderSheet(){
 function parseAmt(){const v=parseFloat($('amt').value.replace(/\s/g,'').replace(',','.'));return isFinite(v)&&v>0?v:0;}
 function openSheet(mode,pre){
   S.mode=mode||'exp';S.draft={key:null,grp:'kon',who:S.me};$('amt').value='';$('note').value='';$('date').max=iso(TODAY);$('date').min=iso(new Date(S.months[0].y,S.months[0].mo,1));$('date').value=iso(TODAY);
-  if(pre){const k=pre.key||(pre.cat?(pre.sub?pre.cat+'.'+pre.sub:pre.cat):null);if(k){S.draft.key=k;S.draft.grp=grpOfKey(k);}if(pre.amt>0)$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');if(pre.note)$('note').value=pre.note;}
+  if(pre){const k=pre.key||(pre.cat?(pre.sub?pre.cat+'.'+pre.sub:pre.cat):null);if(k){S.draft.key=k;S.draft.grp=grpOfKey(k);S.draft.fixed=!!pre.fixed;}if(pre.amt>0)$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');if(pre.note)$('note').value=pre.note;}
   renderSheet();$('sheet').hidden=false;setTimeout(()=>$('amt').focus(),30);
 }
 function closeSheet(){$('sheet').hidden=true;}
@@ -998,7 +1001,7 @@ document.addEventListener('click',e=>{
   else if(a==='incAll'){S.incAll=!S.incAll;render(true);}
   else if(a==='repAll'){S.repAll=!S.repAll;render(true);}
   else if(a==='add'){openSheet('exp');}
-  else if(a==='addFor'){const it=monthLeaves(S.month).find(x=>x.key===el.dataset.key);if(it)openSheet('exp',{key:it.key,amt:it.day?Math.max(0,it.limit-it.spent):0,note:it.day?it.name:''});}
+  else if(a==='addFor'){const it=monthLeaves(S.month).find(x=>x.key===el.dataset.key);if(it)openSheet('exp',{key:it.key,fixed:true,amt:it.day?Math.max(0,it.limit-it.spent):0,note:it.day?it.name:''});}
   else if(a==='addinc'){openSheet('inc');}
   else if(a==='mode'){S.mode=el.dataset.v;renderSheet();}
   else if(a==='preset'){$('note').value=el.dataset.n;}
@@ -1006,6 +1009,7 @@ document.addEventListener('click',e=>{
   else if(a==='pview'){S.pview=el.dataset.v;render(true);}
   else if(a==='pfilt'){S.pfilt=el.dataset.v;render(true);}
   else if(a==='dwho'){S.doneWho=el.dataset.v;S.doneN=5;render(true);}
+  else if(a==='sfree'){S.draft.fixed=false;renderSheet();}
   else if(a==='sgrp'){S.draft.grp=el.dataset.g;if(S.draft.key&&grpOfKey(S.draft.key)!==S.draft.grp)S.draft.key=null;renderSheet();}
   else if(a==='skey'){S.draft.key=el.dataset.k;renderSheet();const n=$('note');if(n&&!n.value)n.placeholder=keyName(S.draft.key);}
   else if(a==='sfill'){$('amt').value=String(Math.round(+el.dataset.v*100)/100).replace('.',',');updSinfo();updSave();}

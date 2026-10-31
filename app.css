@@ -649,3 +649,17 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 @media (min-width:1000px){.sheet{max-width:640px}}
 @media (max-width:700px){.it-top{grid-template-columns:34px minmax(0,1fr) auto}.it-top .pr-a{grid-column:2/3;grid-row:2}.it-top .padd{grid-row:1/3;grid-column:3}}
 .dsort .sc,.pctl .sc{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+
+/* --- odlíšené hlavné čísla, text stavov, kompaktná karta úhrady --- */
+.hstats .st-inc{--hc:#1F7A4D}.hstats .st-rest{--hc:#C2570C}.hstats .st-spent{--hc:#2F7FD1}
+.hstats>div.st-inc,.hstats>div.st-rest,.hstats>div.st-spent{padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--hc) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--hc) 22%,var(--line))}
+.hstats .st-inc span,.hstats .st-rest span,.hstats .st-spent span{color:var(--hc)}
+.hstats .st-inc .num{color:inherit}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hstats .st-inc{--hc:#52C28A}:root:not([data-theme="light"]) .hstats .st-rest{--hc:#F59A4A}:root:not([data-theme="light"]) .hstats .st-spent{--hc:#6AAEF0}}
+:root[data-theme="dark"] .hstats .st-inc{--hc:#52C28A}:root[data-theme="dark"] .hstats .st-rest{--hc:#F59A4A}:root[data-theme="dark"] .hstats .st-spent{--hc:#6AAEF0}
+.cg-n{display:flex;flex-direction:column;min-width:0}
+.cg-s{font-size:12.5px;color:var(--muted);min-height:1.2em}
+.cg-s .dtx{color:var(--ink)}.cg-s .dtx.soon{color:var(--orange)}.cg-s .dtx.late{color:var(--bad)}
+.dgt{font-size:13px}.dgt.bad{color:var(--bad)}.dgt.orange{color:var(--orange)}.dgt.ok{color:var(--ok)}.dgt.mute{color:var(--ink)}
+.fxit{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,var(--surface))}
+.fxit .link{margin:0}
