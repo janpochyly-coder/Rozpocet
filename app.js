@@ -59,7 +59,44 @@ const I={
  alert:'<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
  over:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'
 };
-const ic=(n,s)=>'<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[n]+'</svg>';
+const IW={
+ sheriff:'<circle cx="12" cy="12" r="9.5"/><path d="M12 5.2l1.7 4.1 4.4.3-3.4 2.8 1.1 4.3L12 14.4l-3.8 2.3 1.1-4.3-3.4-2.8 4.4-.3z"/>',
+ star:'<path d="M12 2.8l2.4 5.6 6 .5-4.6 3.9 1.4 5.9L12 15.8 6.8 18.7l1.4-5.9L3.6 8.9l6-.5z"/><circle cx="12" cy="2.2" r=".9"/><circle cx="21.2" cy="8.6" r=".9"/><circle cx="3" cy="8.6" r=".9"/>',
+ sack:'<path d="M9 3.2c1.2 1.1 4.8 1.1 6 0l-1.3 3.2c3.4 1.7 5.3 5 5.3 8.6 0 3.6-3 5.8-7 5.8s-7-2.2-7-5.8c0-3.6 1.9-6.9 5.3-8.6z"/><path d="M9.6 6.6h4.8"/><path d="M12 10.5v7.5M14.2 12c-.5-1.3-4.4-1.3-4.4.5 0 2 4.4 1 4.4 3.1 0 1.8-3.9 1.8-4.5.3"/>',
+ horseshoe:'<path d="M6 20.5V11a6 6 0 0 1 12 0v9.5h-3.6V11a2.4 2.4 0 0 0-4.8 0v9.5z"/><path d="M7.6 13.5h.01M16.4 13.5h.01M7.6 17h.01M16.4 17h.01"/>',
+ barn:'<path d="M3 10.5L12 4l9 6.5V20H3z"/><path d="M7.5 20v-6.5h9V20M7.5 13.5l9 6.5M16.5 13.5l-9 6.5"/>',
+ wagon:'<path d="M4 8.5C4 5.8 7 4 12 4s8 1.8 8 4.5V14H4z"/><path d="M4 14h16M8 8v6M12 7.5V14M16 8v6"/><circle cx="8" cy="18.5" r="2.5"/><circle cx="16.5" cy="18.5" r="2.5"/>',
+ wheel:'<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="1.8"/><path d="M12 3.2V10M12 14v6.8M3.2 12H10M14 12h6.8M5.8 5.8l4.8 4.8M13.4 13.4l4.8 4.8M18.2 5.8l-4.8 4.8M10.6 13.4l-4.8 4.8"/>',
+ bottle:'<path d="M10 2.8h4M10.5 2.8v4.2L8.6 9.6V19a1.6 1.6 0 0 0 1.6 1.6h3.6a1.6 1.6 0 0 0 1.6-1.6V9.6L13.5 7V2.8"/><path d="M8.6 13h6.8"/>',
+ vest:'<path d="M7.5 3L3.5 6v13.5h5.6L12 17l2.9 2.5h5.6V6L16.5 3 14.2 5.5H9.8z"/><path d="M12 8v9"/><path d="M9.3 12h.01M9.3 15h.01M14.7 12h.01M14.7 15h.01"/>',
+ telegraph:'<path d="M12 3v18M8 21h8M5 6.5h14M7 10.5h10"/><path d="M5 6.5V5M19 6.5V5M7 10.5V9M17 10.5V9"/>',
+ nuggets:'<path d="M3.5 19l2.3-5.5h12.4l2.3 5.5z"/><path d="M7.5 13.5L9 9.5h6l1.5 4"/><path d="M18.6 3.5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z"/>',
+ chest:'<path d="M3.5 11V19h17v-8"/><path d="M3.5 11c0-4 3-6 8.5-6s8.5 2 8.5 6z"/><path d="M3.5 11h17"/><rect x="10" y="10" width="4" height="4.4" rx=".9"/>',
+ badge:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 8l1.3 2.8 3 .3-2.2 2 .7 3L12 14.6 9.2 16.1l.7-3-2.2-2 3-.3z"/>',
+ dynamite:'<rect x="5" y="8.5" width="5" height="12.5" rx="1.2"/><rect x="11.5" y="8.5" width="5" height="12.5" rx="1.2"/><path d="M7.5 8.5c0-2.8 2.5-2.8 3-5.5M14 8.5c0-2 2-2.6 2.6-4.5M17.5 3l1.2-1.3M19.2 6.2h2M18.4 4.4l1.8-.6"/>',
+ saddlebag:'<path d="M4 8.5C4 7 5 6 6.5 6h11C19 6 20 7 20 8.5v8.8c0 1.5-1 2.5-2.5 2.5h-11C5 19.8 4 18.8 4 17.3z"/><path d="M4 11.5h16M10 11.5V15h4v-3.5M9 6V4.2h6V6"/>',
+ lantern:'<path d="M9 3h6M10.2 3v2M13.8 3v2"/><path d="M8.5 5h7l1.2 3v8l-1.2 3h-7l-1.2-3V8z"/><path d="M12 9c1.6 1.6 1.6 3.6 0 5.2-1.6-1.6-1.6-3.6 0-5.2z"/><path d="M8 21h8"/>',
+ pan:'<circle cx="9.5" cy="12.5" r="6.3"/><path d="M15.8 12.5H22"/><path d="M6.5 10.5c1-1.3 2.5-1.5 3.5-.8"/>',
+ barrel:'<path d="M6 4h12c1.2 3.2 1.2 13 0 16H6c-1.2-3-1.2-12.800 0-16z"/><path d="M6.3 8h11.4M6.3 16h11.4M12 4v16"/>',
+ pickaxe:'<path d="M3.5 9.5C6 4.5 18 4.5 20.5 9.5"/><path d="M12 6.4V21"/><path d="M3.5 9.5l2.2 1.2M20.5 9.5l-2.2 1.2"/>',
+ tracks:'<path d="M8.5 3L5 21M15.5 3L19 21"/><path d="M6.7 8.5h10.6M5.9 13h12.2M5.2 17.5h13.6"/>',
+ key2:'<circle cx="7.5" cy="12" r="3.6"/><path d="M11 12h10M17.2 12v3M20.4 12v2.4"/>',
+ harmonica:'<rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7.5 8v8M12 8v8M16.5 8v8"/>',
+ telegram:'<rect x="3" y="6" width="18" height="12.5" rx="1"/><path d="M3 7l9 6.5L21 7"/>',
+ ledger:'<path d="M5 3.5h12.5A1.5 1.5 0 0 1 19 5v14a1.5 1.5 0 0 1-1.5 1.5H5z"/><path d="M5 3.5v17M8.5 8h7M8.5 11.5h7M8.5 15h4"/>',
+ boot:'<path d="M8.5 3h5.8v8.5l5.2 2.8V20H6.8C5.800 20 5 19.200 5 18.200V8.800z"/><path d="M5 17h14.500"/>',
+ hat:'<path d="M2.5 15.500c3 0 3.500-2 6-2 .8-2.500.5-6 2-8 1-1.300 2.500-1.300 3.500 0 1.500 2 1.200 5.500 2 8 2.500 0 3 2 6 2-1.500 3-5.500 4-10 4s-8.500-1-9.500-4z"/><path d="M8.500 13.500c2.200 1 4.800 1 7 0"/>',
+ coin2:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6.200"/><path d="M12 8.300v7.400M14.200 10.300c-.4-1.400-4.400-1.400-4.400.4 0 2 4.400 1 4.400 3.100 0 1.800-3.900 1.800-4.500.3"/>',
+ poster:'<path d="M5 3h14v18H5z"/><path d="M8 6.500h8"/><circle cx="12" cy="11.500" r="2.600"/><path d="M8.300 17.500h7.400M9.800 19.500h4.400"/>',
+ saloon:'<path d="M3 21V9.500l3-2V5.500h12v2l3 2V21z"/><path d="M3 9.500h18M8 21v-5h8v5M6.500 13h.01M17.500 13h.01"/>',
+ train:'<rect x="6" y="4" width="12" height="13" rx="2"/><path d="M6 9h12"/><circle cx="9.500" cy="13" r="1"/><circle cx="14.500" cy="13" r="1"/><path d="M8 20.500l2-3.500M16 20.500l-2-3.500M12 2v2"/>',
+ church:'<path d="M12 2.500v5M9.500 5h5"/><path d="M6 21v-9l6-4.500 6 4.500v9z"/><path d="M10 21v-5.500h4V21"/>',
+ scroll:'<path d="M8 4h10.500A1.500 1.500 0 0 1 20 5.500V7H10"/><path d="M8 4a2 2 0 0 0-2 2v11.500A2.500 2.500 0 0 0 8.500 20h8A2.500 2.500 0 0 0 19 17.500V7"/><path d="M10 11h6M10 14.500h4"/>',
+ cactus:'<path d="M12 21V6a2 2 0 0 1 4 0v0M12 21V6a2 2 0 0 0-4 0"/><path d="M12 21V4.500a2 2 0 0 1 4 0V21M5.500 12.500v-2a2 2 0 0 1 4 0v3.500h2.500M18.500 11v-2a2 2 0 0 0-4 0v4.500H12M8 21h8"/>'
+};
+const WMAP={home:'barn',cart:'wagon',car:'wheel',drop:'bottle',shirt:'vest',phone:'telegraph',signal:'telegraph',cash:'sack',trend:'nuggets',archive:'chest',shield:'badge',compass:'wheel',gift:'dynamite',brief:'saddlebag',dots:'horseshoe',bolt:'lantern',utensils:'pan',fuel:'barrel',wrench:'pickaxe',road:'tracks',key:'key2',music:'harmonica',play:'harmonica',chat:'telegram',sparkle:'star',bag:'sack',medical:'bottle',book:'ledger',child:'boot',user:'hat',users:'hat',card:'poster',coin:'coin2',building:'saloon',luggage:'train',star:'star',percent:'church',palette:'scroll',umbrella:'badge',clip:'scroll',grid:'sheriff',pie:'sack',bars:'nuggets',cal:'scroll',file:'scroll'};
+const isWest=()=>document.documentElement.getAttribute('data-style')==='western';
+const ic=(n,s)=>{const w=isWest()&&WMAP[n]&&IW[WMAP[n]];return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
 
 /* ---------- dátumy ---------- */
 const MN12=['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
@@ -537,7 +574,9 @@ function insights(){
   list.push('Na splátky dlhov išlo <b>'+eur(dp)+'</b>'+(M_(m).status==='closed'?' z plánovaných '+eur(catLimit(CAT.dlh,m)):'')+'.');
   return '<ul class="ins">'+list.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
 }
-const GCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F',dlh:'#C4473D',mim:'#5B6B7A'};
+const MCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F',dlh:'#C4473D',mim:'#5B6B7A'};
+const WCOL={des:'#A23B2A',byv:'#4F6B8A',kon:'#C58B1B',pra:'#7A4E6B',odk:'#5E7A3A',dlh:'#8B2E16',mim:'#5C4A38'};
+const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:MCOL)[k]});
 function grpSums(m){const o={};DGRP.forEach(g=>o[g.id]=0);txm(m).forEach(t=>{o[grpOfKey(txKey(t))]+=t.amt;});return o;}
 function grpLims(m){const o={};DGRP.forEach(g=>o[g.id]=0);monthLeaves(m).forEach(x=>{o[grpOfKey(x.key)]+=x.limit;});return o;}
 function stackChart(){
@@ -882,9 +921,76 @@ function applyLook(){
   const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',w?'#3A2312':(effTheme()==='dark'?'#0A1118':'#14202E'));
 }
 function lookCtl(){
-  const dark=effTheme()==='dark',w=document.documentElement.getAttribute('data-style')==='western';
+  const dark=effTheme()==='dark',w=isWest();
   return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
-   '<button type="button" class="wbtn" data-act="styleTog" aria-pressed="'+w+'">'+ic('star',16)+'<span>'+(w?'Moderný':'Western')+'</span></button>';
+   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Potiahni páku"><span class="wl-plate"><i class="wl-r a"></i><i class="wl-r b"></i><i class="wl-r c"></i><i class="wl-r d"></i><span class="wl-t">WESTERN</span><span class="wl-slot"><i class="wl-rod"></i><i class="wl-knob"></i></span><span class="wl-s">'+(w?'vypnúť':'zapnúť')+'</span></span></button>';
+}
+/* preklad do western slovníka (len pri zapnutom western vzhľade) */
+const WDICT={
+ 'Prehľad':'Mesto','Rozpočet':'Pokladňa','Analytika':'Mapa','Plán':'Ranč',
+ 'Rodinný rozpočet':'Rodinný ranč',
+ 'Plánované platby':'Hľadané platby','Vykonané platby':'Vybavené prípady','Najbližšie platby':'Najbližší hľadaní',
+ 'K dispozícii':'V pokladnici','Zostáva uhradiť':'Treba vyplatiť','Minuté':'Minuté zlato','podľa príjmov':'podľa výplat','z plánovaných výdavkov':'z hľadaných platieb','všetko uhradené':'všetko vyplatené','v tomto mesiaci':'tento mesiac',
+ 'Po úhradách všetkého ostane':'Po vyplatení všetkého ostane',
+ 'Uhradiť':'Vyplatiť','Pridať':'Zapísať','Pridať zápis':'Zapísať do knihy','Pridať výdavok':'Zapísať výdavok','Pridať príjem':'Zapísať výplatu','Nový výdavok':'Nový záznam','Nový príjem':'Nová výplata','Upraviť výdavok':'Prepísať záznam','Upraviť príjem':'Prepísať výplatu',
+ 'Uložiť':'Do trezoru','Uložiť zmeny':'Zapečatiť zmeny','Uložiť mesiac':'Zapečatiť mesiac','Odstrániť':'Vyhnať z mesta','Upraviť':'Prepísať','Upraviť mesiac':'Prepísať mesiac','Zobraziť':'Pozrieť','Zrušiť':'Zrušiť',
+ 'Výdavok':'Výdaj','Príjem':'Výplata','Príjmy':'Výplaty','Kto platil':'Kto vyplatil','Kto dostal':'Kto dostal','Dátum':'Dátum','Poznámka':'Poznámka','Kategória':'Skupina','Položka':'Zápis',
+ 'Desiatky':'Kostol','Bývanie':'Ranč','Konzum':'Obchod','Pravidelné':'Dávky','Odkladanie':'Trezor','Dlhy':'Bankár','Mimoriadne':'Divočina',
+ 'Nájom':'Nájom ranča','Elektrina':'Lampový olej','Jedlo':'Fazuľa a mäso','Drogéria':'Zmiešaný tovar','Oblečenie':'Klobúky a čižmy','Nafta':'Seno pre koňa','Poistka':'Poistka koča','Servis':'Kováč','Diaľničná':'Mýto','Investovanie':'Zlatá baňa','Dovolenka':'Výlet vlakom','Výlety':'Výpravy','Oslavy':'Saloon párty','Ostatné':'Všeličo',
+ 'Najnovšie':'Čerstvé','Najstaršie':'Staré','Najvyššia suma':'Najviac zlata','Všetci':'Všetci',
+ 'Všetko':'Všetko','Neuhradené':'Nevyplatené','Uhradené':'Vyplatené','Podľa kategórií':'Podľa skupín','Podľa termínu':'Podľa lehoty',
+ 'Po termíne':'Po lehote','Do 48 hodín':'Do 48 hodín','Čaká na termín':'Čaká na lehotu','Mesačné budgety':'Mesačné zásoby','Prekročené budgety':'Prekročené zásoby',
+ 'Aktívny mesiac':'Terajší mesiac','Nasledujúce mesiace':'Ďalšie mesiace','História':'Kronika','Mesiace':'Mesiace','Výdavky':'Výdaje','Zariadenie':'Stanovisko','Vzhľad':'Vzhľad','Pridať mesiac':'Pridať mesiac',
+ 'Zvyšok':'Zvyšok','Dnes':'Dnes','Včera':'Včera','Zmeniť položku':'Iný zápis',
+ 'Rozpočet mesiaca':'Mesačná pokladnica','Kam idú peniaze':'Kam odtieká zlato','Plán a skutočnosť':'Sľuby a skutočnosť','Najväčšie položky':'Najväčšie zápisy','Kto platí':'Kto vyplatil','Čo si všimnúť':'Na čo si dať pozor','Grafy':'Grafy','Report':'Správa'
+};
+const WRX=[
+ [/^uhradené (\d+) z (\d+)$/,'vybavené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
+];
+let wBusy=false;
+function wTr(str){
+  const m=str.match(/^(\s*)([\s\S]*?)(\s*)$/);if(!m||!m[2])return str;
+  let t=m[2],r=WDICT[t];
+  if(r===undefined){for(const [rx,rep] of WRX){if(rx.test(t)){r=t.replace(rx,rep);break;}}}
+  return r===undefined?str:m[1]+r+m[3];
+}
+function westernize(root){
+  if(!isWest()||wBusy)return;
+  wBusy=true;
+  try{
+    const wk=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT);let n;
+    while((n=wk.nextNode())){
+      const p=n.parentNode;if(p&&(p.tagName==='SCRIPT'||p.tagName==='STYLE'))continue;
+      const t=wTr(n.nodeValue);if(t!==n.nodeValue){if(n.__o===undefined)n.__o=n.nodeValue;n.nodeValue=t;}
+    }
+  }finally{wBusy=false;}
+}
+function unwesternize(){
+  const wk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+  while((n=wk.nextNode())){if(n.__o!==undefined){n.nodeValue=n.__o;n.__o=undefined;}}
+}
+new MutationObserver(ms=>{if(!isWest()||wBusy)return;for(const m of ms){if(m.type==='characterData'){westernize(m.target.parentNode);}else m.addedNodes.forEach(x=>{if(x.nodeType===1)westernize(x);else if(x.nodeType===3&&x.parentNode)westernize(x.parentNode);});}}).observe(document.body,{childList:true,subtree:true,characterData:true});
+/* dvere saloonu: animácia prepnutia vzhľadu */
+function swingDoors(cb){
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){cb();return;}
+  let d=document.getElementById('doors');
+  if(!d){d=document.createElement('div');d.id='doors';d.className='doors';d.setAttribute('aria-hidden','true');d.innerHTML='<div class="door l"><i></i></div><div class="door r"><i></i></div><div class="dust"></div>';document.body.appendChild(d);}
+  d.classList.remove('go');void d.offsetWidth;d.classList.add('go');
+  setTimeout(cb,520);
+  setTimeout(()=>{d.classList.remove('go');},1700);
+}
+let leverBusy=false;
+function toggleWestern(btn){
+  if(leverBusy)return;leverBusy=true;
+  const on=store.get('rr_style')!=='western';
+  if(btn){btn.setAttribute('aria-checked',on);}
+  swingDoors(()=>{
+    store.set('rr_style',on?'western':'modern');applyLook();
+    if(!on)unwesternize();
+    renderTabs();render(true);if(on)westernize(document.body);
+  });
+  setTimeout(()=>{leverBusy=false;},1750);
 }
 function renderTabs(){
   $('tabbar').innerHTML=TABS.map(t=>t?'<button class="tab" data-act="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ic(t[2],22)+t[1]+'</button>':'<button class="fab" data-act="add" aria-label="Pridať výdavok alebo príjem">'+ic('plus',26)+'</button>').join('')+'<div class="sidectl">'+lookCtl()+'</div>';
@@ -1029,7 +1135,7 @@ document.addEventListener('click',e=>{
   else if(a==='idIcon'){idSync();S.idlg.icon=S.idlg.icon===el.dataset.i?'':el.dataset.i;renderIdlg();}
   else if(a==='idDel'){if(window.confirm('Zmazať tento výdavok? Už zadané platby ostanú v histórii.'))saveItemDef(true);}
   else if(a==='themeTog'){store.set('rr_theme',effTheme()==='dark'?'light':'dark');applyLook();renderTabs();render(true);}
-  else if(a==='styleTog'){store.set('rr_style',store.get('rr_style')==='western'?'modern':'western');applyLook();renderTabs();render(true);}
+  else if(a==='styleTog'){toggleWestern(el);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
@@ -1179,7 +1285,7 @@ window.addEventListener('online',poll);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 // kód z odkazu (#k=...) alebo z uloženého zariadenia
 (function init(){
-  applyLook();
+  applyLook();setTimeout(()=>{if(isWest())westernize(document.body);},0);
   const m=/[#&]k=([0-9a-fA-F]{32})/.exec(location.hash);
   if(m){store.set('rr_code',m[1].toLowerCase());try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
   S.code=store.get('rr_code');
