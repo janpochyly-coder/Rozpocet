@@ -798,3 +798,8 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 [data-style="western"] .blk>h3{justify-content:flex-start;gap:8px;display:flex;align-items:baseline}
 [data-style="western"] .blk>h3 .small{margin-left:auto}
 [data-style="western"] .small .num,[data-style="western"] small .num{font-weight:600}
+
+.li.clk{cursor:pointer}
+.li.clk:hover{background:var(--surface-2)}
+.li.clk:focus-visible{outline:2px solid var(--bar);outline-offset:-2px}
+#sdel{color:var(--bad)}

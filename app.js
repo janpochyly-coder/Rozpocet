@@ -277,7 +277,7 @@ function txLabel(t){
   return c.name+(s?' · '+(c.kind==='weeks'?'týždeň '+weekInfo(t.m,+t.sub[1]).n:s.name):'');
 }
 function txRows(arr){
-  return '<div class="list">'+arr.map(t=>'<div class="li">'+gIco(txKey(t))+'<div class="t"><b>'+esc(t.note||CAT[t.cat].name)+'</b><span>'+esc(txLabel(t))+' · '+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num">'+eur2(t.amt)+'</span></div>').join('')+'</div>';
+  return '<div class="list">'+arr.map(t=>'<div class="li clk" role="button" tabindex="0" data-act="txEdit" data-id="'+esc(t.id)+'" aria-label="Upraviť platbu">'+gIco(txKey(t))+'<div class="t"><b>'+esc(t.note||CAT[t.cat].name)+'</b><span>'+esc(txLabel(t))+' · '+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num">'+eur2(t.amt)+'</span></div>').join('')+'</div>';
 }
 function leaves(m){
   const ss=bySub(m),cc=byCat(m),out=[];
@@ -298,7 +298,7 @@ const head=t=>'<div class="sh"><h1>'+t+'</h1>'+mpick()+'</div>';
 function incomeBlock(m){
   const M=M_(m),recv=received(m),entries=incTxm(m).slice().sort(byDateDesc),shown=S.incAll?entries:entries.slice(0,2);
   return '<div class="blk"><h3>Príjmy <span class="small num">'+eur(recv)+(M.status!=='closed'?' z '+eur(incExp(m))+' očakávaných':'')+'</span></h3><section class="card">'+
-   (entries.length?'<div class="list">'+shown.map(t=>'<div class="li"><div class="t"><b>'+esc(t.note)+'</b><span>'+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num" style="color:var(--ok)">+'+eur2(t.amt)+'</span></div>').join('')+'</div>'+(entries.length>2?'<button class="link" data-act="incAll" aria-expanded="'+S.incAll+'">'+(S.incAll?'Zobraziť menej':'Zobraziť všetky '+entries.length)+'</button>':''):'<p class="empty">V tomto mesiaci zatiaľ žiadny príjem.</p>')+
+   (entries.length?'<div class="list">'+shown.map(t=>'<div class="li clk" role="button" tabindex="0" data-act="incEdit" data-id="'+esc(t.id)+'" aria-label="Upraviť príjem"><div class="t"><b>'+esc(t.note)+'</b><span>'+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num" style="color:var(--ok)">+'+eur2(t.amt)+'</span></div>').join('')+'</div>'+(entries.length>2?'<button class="link" data-act="incAll" aria-expanded="'+S.incAll+'">'+(S.incAll?'Zobraziť menej':'Zobraziť všetky '+entries.length)+'</button>':''):'<p class="empty">V tomto mesiaci zatiaľ žiadny príjem.</p>')+
    (M.status!=='closed'&&incExp(m)===0&&recv===0?'<p class="note" style="margin-top:10px">Rozpočet a desiatky sa počítajú z príjmu. Nastavte očakávaný príjem J a I.</p><button class="btn sm" style="margin-top:8px" data-act="editM" data-m="'+m+'">Nastaviť očakávaný príjem</button>':'')+
    '<button class="btn ghost" style="width:100%;margin-top:12px" data-act="addinc">Pridať príjem</button></section></div>';
 }
@@ -944,9 +944,11 @@ function updSinfo(){
 }
 function renderSheet(){
   const inc=S.mode==='inc',fx=!inc&&S.draft.fixed&&S.draft.key;
-  $('stitle').textContent=inc?'Nový príjem':(fx?keyName(S.draft.key):'Nový výdavok');$('save').textContent=inc?'Pridať príjem':'Pridať výdavok';
+  const ed=S.draft.edit;
+  $('stitle').textContent=ed?(inc?'Upraviť príjem':'Upraviť výdavok'):(inc?'Nový príjem':(fx?keyName(S.draft.key):'Nový výdavok'));$('save').textContent=ed?'Uložiť zmeny':(inc?'Pridať príjem':'Pridať výdavok');
+  $('sdel').hidden=!ed;
   $('m-exp').setAttribute('aria-pressed',!inc);$('m-inc').setAttribute('aria-pressed',inc);
-  const ms=document.querySelector('#form>.seg');if(ms)ms.hidden=!!fx;
+  const ms=document.querySelector('#form>.seg');if(ms)ms.hidden=!!fx||!!S.draft.edit;
   $('catwrap').hidden=inc||!!fx;$('wholbl').textContent=inc?'Kto dostal':'Kto platil';$('note').placeholder=inc?'Napr. Výplata':'Napr. Lidl';
   $('chips').innerHTML='<div class="stiles">'+DGRP.map(g=>'<button type="button" class="stile g-'+g.id+'" data-act="sgrp" data-g="'+g.id+'" aria-pressed="'+(S.draft.grp===g.id)+'"><span class="ico gi">'+ic(GICON[g.id],18)+'</span><span>'+g.name+'</span></button>').join('')+'</div>';
   $('whoseg').innerHTML=['J','I'].map(w=>'<button type="button" data-act="who" data-w="'+w+'" aria-pressed="'+(S.draft.who===w)+'">'+dot(w,true)+PEOPLE[w]+'</button>').join('');
@@ -966,6 +968,24 @@ function openSheet(mode,pre){
   if(pre){const k=pre.key||(pre.cat?(pre.sub?pre.cat+'.'+pre.sub:pre.cat):null);if(k){S.draft.key=k;S.draft.grp=grpOfKey(k);S.draft.fixed=!!pre.fixed;}if(pre.amt>0)$('amt').value=String(Math.round(pre.amt*100)/100).replace('.',',');if(pre.note)$('note').value=pre.note;}
   renderSheet();$('sheet').hidden=false;setTimeout(()=>$('amt').focus(),30);
 }
+async function delEdit(){
+  const ed=S.draft.edit;if(!ed)return;
+  S.busy++;
+  try{
+    await rpc(ed.kind==='inc'?'delete_income':'delete_transaction',{p_code:S.code,p_id:ed.id});
+    await loadAll(false,true);closeSheet();render(true);toast('Zápis odstránený');
+  }catch(err){console.error(err);toast('Odstránenie sa nepodarilo',true);}
+  finally{S.busy--;}
+}
+function openEdit(kind,id){
+  const t=(kind==='tx'?S.tx:S.incTx).find(x=>String(x.id)===String(id));if(!t)return;
+  S.mode=kind==='tx'?'exp':'inc';
+  const key=kind==='tx'?(t.sub&&t.cat!=='jed'?t.cat+'.'+t.sub:t.cat):null;
+  S.draft={key:key,grp:key?grpOfKey(key):'kon',who:t.who,fixed:false,edit:{kind:kind,id:t.id}};
+  $('amt').value=String(Math.round(t.amt*100)/100).replace('.',',');$('note').value=t.note||'';
+  $('date').max=iso(TODAY);$('date').min=iso(new Date(S.months[0].y,S.months[0].mo,1));$('date').value=iso(t.dt>TODAY?TODAY:t.dt);
+  renderSheet();$('sheet').hidden=false;
+}
 function closeSheet(){$('sheet').hidden=true;}
 let toastT;
 function toast(msg,err){const t=$('toast');t.className='toast'+(err?' err':'');t.innerHTML=ic(err?'alert':'check',18)+esc(msg);t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
@@ -980,6 +1000,7 @@ document.addEventListener('scroll',e=>{
   l.scrollTop=top;
 },true);
 
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('clk')){e.preventDefault();e.target.click();}});
 document.addEventListener('submit',e=>{if(e.target&&e.target.id==='iform'){e.preventDefault();saveItemDef(false);}});
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
@@ -1025,6 +1046,9 @@ document.addEventListener('click',e=>{
   else if(a==='pview'){S.pview=el.dataset.v;render(true);}
   else if(a==='pfilt'){S.pfilt=el.dataset.v;render(true);}
   else if(a==='dwho'){S.doneWho=el.dataset.v;S.doneN=5;render(true);}
+  else if(a==='txEdit'){openEdit('tx',el.dataset.id);}
+  else if(a==='incEdit'){openEdit('inc',el.dataset.id);}
+  else if(a==='txDel'){if(S.draft.edit&&window.confirm('Odstrániť tento zápis? Nedá sa vrátiť späť.'))delEdit();}
   else if(a==='sfree'){S.draft.fixed=false;renderSheet();}
   else if(a==='sgrp'){S.draft.grp=el.dataset.g;if(S.draft.key&&grpOfKey(S.draft.key)!==S.draft.grp)S.draft.key=null;renderSheet();}
   else if(a==='skey'){S.draft.key=el.dataset.k;renderSheet();const n=$('note');if(n&&!n.value)n.placeholder=keyName(S.draft.key);}
@@ -1059,6 +1083,17 @@ $('form').addEventListener('submit',async e=>{
   const amt=parseAmt();if(!amt)return;
   const dt=sheetDate(),btn=$('save');btn.disabled=true;S.busy++;
   try{
+    if(S.draft.edit){
+      let m=calIdx(dt);if(m<0)m=S.month;
+      const ed=S.draft.edit;
+      if(ed.kind==='inc')await rpc('update_income',{p_code:S.code,p_id:ed.id,p_month:M_(m).id,p_dt:iso(dt),p_amount:round2(amt),p_who:S.draft.who,p_note:$('note').value.trim()||'Príjem'});
+      else{
+        if(!S.draft.key){btn.disabled=false;S.busy--;return;}
+        const kp=S.draft.key.split('.');
+        await rpc('update_transaction',{p_code:S.code,p_id:ed.id,p_month:M_(m).id,p_dt:iso(dt),p_cat:kp[0],p_sub:kp[1]||'',p_amount:round2(amt),p_who:S.draft.who,p_note:$('note').value.trim()||keyName(S.draft.key)});
+      }
+      await loadAll(false,true);closeSheet();render(true);toast('Zmeny uložené');return;
+    }
     if(S.mode==='inc'){
       let m=calIdx(dt);if(m<0)m=S.month;
       const r=await rpc('add_income',{p_code:S.code,p_month:M_(m).id,p_dt:iso(dt),p_amount:round2(amt),p_who:S.draft.who,p_note:$('note').value.trim()||'Príjem'});

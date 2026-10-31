@@ -123,6 +123,44 @@ $FN['add_transaction'] = function (array $a) {
     return $row;
 };
 
+$FN['update_transaction'] = function (array $a) {
+    $hid = need_hh($a['p_code'] ?? '');
+    $id = txt($a['p_id'] ?? '', 36);
+    if (!scalar('SELECT 1 FROM transactions WHERE id = ? AND household_id = ?', [$id, $hid])) { fail(404, 'not found'); }
+    $mid = need_month($hid, $a['p_month'] ?? '');
+    $amount = num($a['p_amount'] ?? null);
+    if ($amount <= 0) { fail(400, 'invalid amount'); }
+    $cat = txt($a['p_cat'] ?? '', 16);
+    if ($cat === '') { fail(400, 'invalid category'); }
+    q('UPDATE transactions SET month_id = ?, dt = ?, cat = ?, sub = ?, amount = ?, who = ?, note = ? WHERE id = ? AND household_id = ?',
+      [$mid, date_ok($a['p_dt'] ?? ''), $cat, txt($a['p_sub'] ?? '', 32), $amount, who_ok($a['p_who'] ?? ''), txt($a['p_note'] ?? '', 300), $id, $hid]);
+    return null;
+};
+
+$FN['delete_transaction'] = function (array $a) {
+    $hid = need_hh($a['p_code'] ?? '');
+    q('DELETE FROM transactions WHERE id = ? AND household_id = ?', [txt($a['p_id'] ?? '', 36), $hid]);
+    return null;
+};
+
+$FN['update_income'] = function (array $a) {
+    $hid = need_hh($a['p_code'] ?? '');
+    $id = txt($a['p_id'] ?? '', 36);
+    if (!scalar('SELECT 1 FROM incomes WHERE id = ? AND household_id = ?', [$id, $hid])) { fail(404, 'not found'); }
+    $mid = need_month($hid, $a['p_month'] ?? '');
+    $amount = num($a['p_amount'] ?? null);
+    if ($amount <= 0) { fail(400, 'invalid amount'); }
+    q('UPDATE incomes SET month_id = ?, dt = ?, amount = ?, who = ?, note = ? WHERE id = ? AND household_id = ?',
+      [$mid, date_ok($a['p_dt'] ?? ''), $amount, who_ok($a['p_who'] ?? ''), txt($a['p_note'] ?? '', 300), $id, $hid]);
+    return null;
+};
+
+$FN['delete_income'] = function (array $a) {
+    $hid = need_hh($a['p_code'] ?? '');
+    q('DELETE FROM incomes WHERE id = ? AND household_id = ?', [txt($a['p_id'] ?? '', 36), $hid]);
+    return null;
+};
+
 $FN['add_income'] = function (array $a) {
     $hid = need_hh($a['p_code'] ?? '');
     $mid = need_month($hid, $a['p_month'] ?? '');
