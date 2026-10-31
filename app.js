@@ -126,10 +126,26 @@ const IK={
  ledger:'<path d="M5 3.500h12.500A1.500 1.500 0 0 1 19 5v14a1.500 1.500 0 0 1-1.500 1.500H5z"/><path d="M5 3.500v17M8.500 8h7M8.500 11.500h7M8.500 15h4"/>'
 };
 const KMAP={home:'castle',cart:'tent',car:'horseshoe',heart:'chapel',drop:'potion',shirt:'tunic',phone:'scroll',signal:'scroll',cash:'purse',trend:'crown',archive:'chest',shield:'shield',compass:'shield',gift:'chalice',brief:'satchel',dots:'fleur',bolt:'torch',utensils:'chalice',fuel:'torch',wrench:'anvil',road:'bridge',key:'key',music:'lute',play:'lute',chat:'seal',sparkle:'crown',bag:'purse',medical:'potion',book:'ledger',child:'pawn',user:'helm',users:'helm',card:'seal',coin:'coin',building:'castle',luggage:'banner',star:'crown',percent:'chapel',palette:'quill',umbrella:'shield',clip:'scroll',grid:'shield',pie:'purse',bars:'tower',cal:'scroll',file:'scroll'};
+const IS={
+ sun:'<circle cx="12" cy="12" r="4.200"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3M5.300 5.300l2.100 2.100M16.600 16.600l2.100 2.100M5.300 18.700l2.100-2.100M16.600 7.400l2.100-2.100"/>',
+ earth:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.500 3 3.500 15 0 18M12 3c-3.500 3-3.500 15 0 18"/>',
+ moon:'<path d="M20 14.500A8.500 8.500 0 1 1 9.500 4a7 7 0 0 0 10.500 10.500z"/><path d="M16.500 5l.5 1.200 1.200.5-1.200.5-.5 1.200-.5-1.200-1.200-.5 1.200-.5z"/>',
+ saturn:'<circle cx="12" cy="12" r="4.800"/><ellipse cx="12" cy="12" rx="10.500" ry="3.400" transform="rotate(-22 12 12)"/>',
+ jupiter:'<circle cx="12" cy="12" r="9"/><path d="M3.500 9h17M3 13h18M4.500 17h15"/><circle cx="15.500" cy="15" r="1.200"/>',
+ comet:'<circle cx="17" cy="7" r="3"/><path d="M14.500 9.500L3 21M13 6.500L4.500 15M17.500 11L9 19.500"/>',
+ star:'<path d="M12 3l1.800 7.200L21 12l-7.200 1.800L12 21l-1.800-7.200L3 12l7.200-1.800z"/>',
+ telescope:'<path d="M3 13l12-6 2 4.500-12 6z"/><path d="M15 7l3-1.500 2.500 5-3 1.500M9 16.500L6 21M10.500 15.500l3 5.500"/>',
+ orbit:'<circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4.200"/><ellipse cx="12" cy="12" rx="10" ry="4.200" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.200" transform="rotate(120 12 12)"/>',
+ constellation:'<circle cx="5" cy="17" r="1.500"/><circle cx="10" cy="9" r="1.500"/><circle cx="16" cy="13" r="1.500"/><circle cx="19" cy="5" r="1.500"/><path d="M5.800 15.800l3.400-5.600M11.400 9.700l3.300 2.600M16.900 11.500l1.500-5"/>',
+ galaxy:'<circle cx="12" cy="12" r="1.500"/><path d="M12 10.500c-2-3 1-6 5-5.500M12 13.500c2 3-1 6-5 5.500M10.500 12c-3-2-6 1-5.500 5M13.500 12c3 2 6-1 5.500-5"/>',
+ asteroid:'<path d="M7 5l6-2 6 4 2 6-4 6-6 2-6-4-2-6z"/><circle cx="10" cy="10" r="1.200"/><circle cx="14.500" cy="14" r="1.700"/>'
+};
+const SMAP={home:'earth',cart:'saturn',car:'comet',heart:'sun',drop:'moon',shirt:'constellation',phone:'moon',signal:'telescope',cash:'asteroid',trend:'galaxy',archive:'jupiter',shield:'orbit',compass:'constellation',gift:'star',brief:'asteroid',dots:'asteroid',bolt:'comet',utensils:'saturn',fuel:'comet',wrench:'orbit',road:'comet',key:'star',music:'star',play:'star',chat:'telescope',sparkle:'star',bag:'jupiter',medical:'moon',book:'constellation',child:'moon',user:'earth',users:'earth',card:'orbit',coin:'sun',building:'earth',luggage:'saturn',star:'comet',percent:'sun',palette:'galaxy',umbrella:'orbit',clip:'constellation',grid:'telescope',pie:'jupiter',bars:'galaxy',cal:'moon',file:'constellation'};
 const styleName=()=>document.documentElement.getAttribute('data-style')||'';
 const isWest=()=>styleName()==='western';
 const isKnight=()=>styleName()==='knight';
-const ic=(n,s)=>{const st=styleName();const w=st==='western'?(WMAP[n]&&IW[WMAP[n]]):st==='knight'?(KMAP[n]&&IK[KMAP[n]]):null;return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
+const isSpace=()=>styleName()==='space';
+const ic=(n,s)=>{const st=styleName();const w=st==='western'?(WMAP[n]&&IW[WMAP[n]]):st==='knight'?(KMAP[n]&&IK[KMAP[n]]):st==='space'?(SMAP[n]&&IS[SMAP[n]]):null;return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
 
 /* ---------- dátumy ---------- */
 const MN12=['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
@@ -610,7 +626,8 @@ function insights(){
 const MCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F',dlh:'#C4473D',mim:'#5B6B7A'};
 const WCOL={des:'#A23B2A',byv:'#4F6B8A',kon:'#C58B1B',pra:'#7A4E6B',odk:'#5E7A3A',dlh:'#8B2E16',mim:'#5C4A38'};
 const KCOL={des:'#8E2A36',byv:'#35557E',kon:'#A9812A',pra:'#5E4778',odk:'#3F6B4A',dlh:'#6E2A2A',mim:'#4A4F5C'};
-const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:isKnight()?KCOL:MCOL)[k]});
+const SCOL={des:'#F2B84B',byv:'#4F8EF7',kon:'#D9A066',pra:'#B9C0D8',odk:'#E08A5A',dlh:'#8A7BD9',mim:'#5ED1C4'};
+const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:isKnight()?KCOL:isSpace()?SCOL:MCOL)[k]});
 function grpSums(m){const o={};DGRP.forEach(g=>o[g.id]=0);txm(m).forEach(t=>{o[grpOfKey(txKey(t))]+=t.amt;});return o;}
 function grpLims(m){const o={};DGRP.forEach(g=>o[g.id]=0);monthLeaves(m).forEach(x=>{o[grpOfKey(x.key)]+=x.limit;});return o;}
 function stackChart(){
@@ -947,17 +964,17 @@ async function doSwitch(){
 const TABS=[['home','Prehľad','grid'],['bud','Rozpočet','pie'],null,['ana','Analytika','bars'],['plan','Plán','cal']];
 const $=id=>document.getElementById(id);
 /* ---------- vzhľad: svetlý/tmavý režim a western štýl ---------- */
-function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;if(isSpace())return 'dark';return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
 function applyLook(){
   const r=document.documentElement,t=store.get('rr_theme'),st=store.get('rr_style');
   if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
-  if(st==='western'||st==='knight')r.setAttribute('data-style',st);else r.removeAttribute('data-style');
-  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='knight'?'#171A21':(effTheme()==='dark'?'#0A1118':'#14202E'));
+  if(st==='western'||st==='knight'||st==='space')r.setAttribute('data-style',st);else r.removeAttribute('data-style');
+  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='knight'?'#171A21':st==='space'?'#0A0C1C':(effTheme()==='dark'?'#0A1118':'#14202E'));
 }
 function lookCtl(){
-  const dark=effTheme()==='dark',w=isWest(),k=isKnight();
+  const dark=effTheme()==='dark',w=isWest(),k=isKnight(),sp=isSpace();
   return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
-   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+'<button type="button" class="lantern" data-act="knightTog" role="switch" aria-checked="'+k+'" aria-label="Rytiersky vzhľad" title="Rytiersky vzhľad (lampáš)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="lt-ring" d="M9.500 4.500V3.500a2.500 2.500 0 0 1 5 0v1"/><path class="lt-body" d="M7.500 6h9l1.200 3v7.500L16.500 20h-9l-1.200-3.500V9z"/><path class="lt-line" d="M6.300 9h11.400M6.300 16.500h11.400M12 6v14"/><path class="lt-flame" d="M12 17.500c-2.200-1.300-2.400-3.500-.8-5.800.6 1 1.100 1.300 1.700 1.400.2-1 .7-1.800 1.300-2.400.9 2.700.5 5.500-2.200 6.800z"/></svg></button>';
+   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+'<button type="button" class="lantern" data-act="knightTog" role="switch" aria-checked="'+k+'" aria-label="Rytiersky vzhľad" title="Rytiersky vzhľad (lampáš)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="lt-ring" d="M9.500 4.500V3.500a2.500 2.500 0 0 1 5 0v1"/><path class="lt-body" d="M7.500 6h9l1.200 3v7.500L16.500 20h-9l-1.200-3.500V9z"/><path class="lt-line" d="M6.300 9h11.400M6.300 16.500h11.400M12 6v14"/><path class="lt-flame" d="M12 17.500c-2.200-1.300-2.400-3.500-.8-5.800.6 1 1.100 1.300 1.700 1.400.2-1 .7-1.800 1.300-2.400.9 2.700.5 5.500-2.200 6.800z"/></svg></button>'+'<button type="button" class="planetbtn" data-act="spaceTog" role="switch" aria-checked="'+sp+'" aria-label="Vesmírny vzhľad" title="Vesmírny vzhľad (planéta)"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle class="pl-body" cx="12" cy="12" r="5.200"/><ellipse class="pl-ring" cx="12" cy="12" rx="10.500" ry="3.400" transform="rotate(-24 12 12)"/><circle class="pl-star" cx="4" cy="5" r=".7"/><circle class="pl-star" cx="20.500" cy="19" r=".6"/></svg></button>';
 }
 /* preklad do western slovníka (len pri zapnutom western vzhľade) */
 const WDICT={
@@ -992,13 +1009,23 @@ const KDICT={
  'Aktívny mesiac':'Terajší mesiac','Nasledujúce mesiace':'Ďalšie mesiace','História':'Archív','Výdavky':'Výdaje','Zariadenie':'Stráž',
  'Rozpočet mesiaca':'Pokladnica mesiaca','Kam idú peniaze':'Kam plynie zlato','Plán a skutočnosť':'Sľuby a skutočnosť','Najväčšie položky':'Najväčšie zápisy','Kto platí':'Kto odvádza','Čo si všimnúť':'Na čo dať pozor','Report':'Správa'
 };
+const SDICT={
+ 'Prehľad':'Obloha','Rozpočet':'Orbity','Analytika':'Atlas','Plán':'Kalendár',
+ 'Rodinný rozpočet':'Naša galaxia',
+ 'Plánované platby':'Na obežnej dráhe','Vykonané platby':'Zaznamenané','Najbližšie platby':'Najbližšie úkazy',
+ 'K dispozícii':'V zásobe','Zostáva uhradiť':'Ešte na dráhe','z plánovaných výdavkov':'z plánovaných platieb',
+ 'Pridať zápis':'Nový záznam','Nový výdavok':'Nový záznam','Nový príjem':'Nový príjem',
+ 'Desiatky':'Slnko','Bývanie':'Zem','Konzum':'Saturn','Pravidelné':'Mesiac','Odkladanie':'Jupiter','Dlhy':'Asteroidy','Mimoriadne':'Kométy',
+ 'Rozpočet mesiaca':'Zásoby mesiaca','Kam idú peniaze':'Kam smeruje energia','História':'Archív','Aktívny mesiac':'Prebiehajúci mesiac'
+};
+const SRX=[];
 const WRX=[
  [/^uhradené (\d+) z (\d+)$/,'vybavené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
 ];
 const KRX=[
  [/^uhradené (\d+) z (\d+)$/,'odvedené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
 ];
-const activeDict=()=>isWest()?[WDICT,WRX]:isKnight()?[KDICT,KRX]:null;
+const activeDict=()=>isWest()?[WDICT,WRX]:isKnight()?[KDICT,KRX]:isSpace()?[SDICT,SRX]:null;
 let wBusy=false;
 function wTr(str){
   const ad=activeDict();if(!ad)return str;
@@ -1190,6 +1217,7 @@ document.addEventListener('click',e=>{
   else if(a==='themeTog'){store.set('rr_theme',effTheme()==='dark'?'light':'dark');applyLook();renderTabs();render(true);}
   else if(a==='styleTog'){toggleStyle('western',el);}
   else if(a==='knightTog'){toggleStyle('knight',el);}
+  else if(a==='spaceTog'){toggleStyle('space',el);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
