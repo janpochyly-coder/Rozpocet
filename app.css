@@ -360,3 +360,37 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 
 .dt>span{white-space:nowrap}
 .dtl{white-space:nowrap}
+
+/* --- editor mesiaca: prehľadnejšie riadky --- */
+.ed-sum{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:center;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.ed-sum>div{display:flex;flex-direction:column;font-size:12.5px;color:var(--muted)}
+.ed-sum b{font-size:18px;color:var(--ink);font-family:var(--f-display)}
+.ed-sum .ed-diff{margin-left:auto;font-size:14px;font-weight:700;flex-direction:row;padding:6px 12px;border-radius:999px;background:var(--surface-2)}
+.ed-diff.ok{color:var(--ok)}.ed-diff.bad{color:var(--bad)}
+.ed-note{margin:0}
+.eg2{padding:12px 14px}
+.eg2-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.eg2-h h3{margin:0;font-size:15px}
+.er{display:grid;grid-template-columns:minmax(0,1fr) 130px 170px 28px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.eg2-h+.er,.eg2-h+.ed-note+.er{border-top:0}
+.er-h{border:0;padding:0 14px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.er-n{font-weight:600;min-width:0}
+.er-n small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.er-l{display:flex;align-items:center;gap:6px}
+.er-l .num-in{width:100%;min-width:0}
+.er-auto{color:var(--muted);font-weight:600}
+.er-d{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+.er-d label{display:flex;align-items:center;gap:6px}
+.er-d .num-in{width:56px}
+.er-x{width:28px;height:28px;border-radius:8px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.er-x:hover{background:var(--surface-2);color:var(--bad)}
+.er-inc{grid-template-columns:minmax(0,1fr) 130px}
+@media (max-width:700px){
+  .er-h{display:none}
+  .er{grid-template-columns:minmax(0,1fr) 112px 28px;grid-template-areas:"n l x" "d d d";row-gap:6px}
+  .er>.er-n{grid-area:n}.er>.er-l{grid-area:l}.er>.er-d{grid-area:d}.er>.er-x,.er>span{grid-area:x}
+  .er-inc{grid-template-columns:minmax(0,1fr) 112px}
+}
+@media (min-width:1000px){
+  .editor{width:min(900px,calc(100% - 48px))}
+}

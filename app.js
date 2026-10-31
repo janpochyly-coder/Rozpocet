@@ -495,42 +495,67 @@ function openEditor(mode,idx){
   E={mode,idx,y,mo,draft:{inc:Object.assign({},src.inc),lim:Object.assign({},src.lim),dates:src.plan.reduce((o,p)=>{if(o[p.key]===undefined)o[p.key]=p.d;return o;},{})}};
   renderEditor();$('editor').hidden=false;
 }
+function edSums(){
+  const dr=E.draft,inc=dr.inc.J+dr.inc.I;let tot=0;const g={};
+  CATS.forEach(c=>{
+    if(c.kind==='manual')return;
+    let v=0;
+    if(c.kind==='tithe')v=inc*.1;
+    else if(c.subs.length)c.subs.forEach(x=>{const n=dr.lim[c.id+'.'+x.id];if(typeof n==='number')v+=n;});
+    else{const n=dr.lim[c.id];if(typeof n==='number')v+=n;}
+    g[c.id]=v;tot+=v;
+  });
+  return {inc,tot,g};
+}
+function edUpdSums(){
+  const m=edSums(),ed=$('editor');
+  const set=(id,t)=>{ed.querySelectorAll('[data-sum="'+id+'"]').forEach(el=>{el.textContent=t;});};
+  set('inc',eur(m.inc));set('tot',eur(m.tot));
+  const d=m.inc-m.tot,el=ed.querySelector('[data-sum="diff"]');
+  if(el){el.textContent=(d>=0?'Zostáva ':'Nad príjem o ')+eur(Math.abs(d));el.className='ed-diff '+(d>=0?'ok':'bad');}
+  Object.keys(m.g).forEach(k=>set('g.'+k,eur(m.g[k])));
+}
 function renderEditor(keep){
   const ed=$('editor'),old=ed.querySelector('.ed-body'),st=old&&keep?old.scrollTop:0,dr=E.draft,M={y:E.y,mo:E.mo};
-  const incSum=dr.inc.J+dr.inc.I;
-  const dateRow=(key,label)=>{
+  const m=edSums();
+  const dateCell=(key,label)=>{
     const on=dr.dates[key]!==undefined,idk=key.replace('.','-');
-    return '<div class="dt"><button type="button" class="switch sm" role="switch" aria-checked="'+on+'" data-act="dateToggle" data-key="'+key+'" aria-label="Dátum platby: '+esc(label)+'"></button><span>Dátum platby</span>'+(on?'<label class="dtl" for="e-date-'+idk+'">Deň v mesiaci<input class="num-in sm" type="text" inputmode="numeric" id="e-date-'+idk+'" data-k="date.'+key+'" value="'+dr.dates[key]+'"></label>':'')+'</div>';
+    return '<div class="er-d"><button type="button" class="switch sm" role="switch" aria-checked="'+on+'" data-act="dateToggle" data-key="'+key+'" aria-label="Dátum platby: '+esc(label)+'"></button>'+(on?'<label for="e-date-'+idk+'">Deň<input class="num-in sm" type="text" inputmode="numeric" id="e-date-'+idk+'" data-k="date.'+key+'" value="'+dr.dates[key]+'"></label>':'<span class="small">bez dátumu</span>')+'</div>';
   };
-  const limInput=(id,key,label,aria)=>{const v=dr.lim[key];return '<div class="fr"><label for="'+id+'">'+label+'</label><input class="num-in" type="text" inputmode="decimal" id="'+id+'" data-k="lim.'+key+'" value="'+(v===null||v===undefined?'':v)+'" placeholder="bez limitu" aria-label="Limit '+esc(aria)+'"></div>';};
+  const limCell=(id,key,aria)=>{const v=dr.lim[key];return '<div class="er-l"><input class="num-in" type="text" inputmode="decimal" id="'+id+'" data-k="lim.'+key+'" value="'+(v===null||v===undefined?'':v)+'" placeholder="bez limitu" aria-label="Limit '+esc(aria)+'"><span>€</span></div>';};
+  const rm=(key,label)=>'<button type="button" class="er-x" data-act="itemOff" data-key="'+key+'" aria-label="Odstrániť z mesiaca: '+esc(label)+'">'+ic('x',16)+'</button>';
   const inLim=k=>Object.prototype.hasOwnProperty.call(dr.lim,k);
-  const offBtn=(key,label)=>'<button type="button" class="link sm-link" data-act="itemOff" data-key="'+key+'" aria-label="Odstrániť z mesiaca: '+esc(label)+'">Odstrániť</button>';
-  const dateRow2=(key,label)=>dateRow(key,label).replace(/<\/div>$/,offBtn(key,label)+'</div>');
-  const limRows=CATS.filter(c=>c.kind!=='manual').map(c=>{
-    if(c.kind==='tithe') return '<div class="eg"><div class="eg-h">'+c.name+'</div><p class="small" style="margin:0">10 % z príjmu, teda '+eur(incSum*.1)+'.</p>'+dateRow('des',c.name)+'</div>';
+  const row=(name,hint,lim,date,x)=>'<div class="er"><div class="er-n">'+name+(hint?'<small>'+hint+'</small>':'')+'</div>'+lim+date+(x||'<span></span>')+'</div>';
+  const head='<div class="er er-h"><div>Položka</div><div>Limit</div><div>Platba v pevný deň</div><span></span></div>';
+  const groups=CATS.filter(c=>c.kind!=='manual').map(c=>{
     let rows='';
-    if(c.subs.length){
+    if(c.kind==='tithe'){
+      rows=row('10 % z príjmu','',  '<div class="er-l er-auto">'+eur(m.inc*.1)+'</div>',dateCell('des',c.name));
+    } else if(c.subs.length){
       rows=c.subs.map((x,k)=>{
         const key=c.id+'.'+x.id;
         if(c.kind!=='weeks'&&!inLim(key))return '';
-        const sv=c.kind==='weeks'?'':stavTxt({key:key,debt:c.kind==='debt',sub:x}),lbl=c.kind==='weeks'?weekInfoM(M,k).label:x.name+(sv?' <span class="small">· '+sv+'</span>':'');
-        return '<div class="fr2">'+limInput('e-lim-'+c.id+'-'+x.id,key,lbl,x.name)+(c.kind==='weeks'?'':dateRow2(key,x.name))+'</div>';
+        const sv=c.kind==='weeks'?'':stavTxt({key:key,debt:c.kind==='debt',sub:x});
+        const name=c.kind==='weeks'?weekInfoM(M,k).label:esc(x.name);
+        return row(name,sv,limCell('e-lim-'+c.id+'-'+x.id,key,x.name),c.kind==='weeks'?'<div class="er-d"><span class="small">—</span></div>':dateCell(key,x.name),c.kind==='weeks'?'':rm(key,x.name));
       }).join('');
     } else if(inLim(c.id)){
       const sv=stavTxt({key:c.id,debt:false});
-      rows='<div class="fr2">'+limInput('e-lim-'+c.id,c.id,'Mesačný limit'+(sv?' <span class="small">· '+sv+'</span>':''),c.name)+dateRow2(c.id,c.name)+'</div>';
+      rows=row('Mesačný limit',sv,limCell('e-lim-'+c.id,c.id,c.name),dateCell(c.id,c.name),rm(c.id,c.name));
     }
     if(!rows)return '';
-    const hint=c.kind==='debt'?'<p class="small" style="margin:0 0 4px">Limit je mesačná splátka.</p>':'';
-    return '<div class="eg"><div class="eg-h">'+c.name+'</div>'+hint+rows+'</div>';
+    const hint=c.kind==='debt'?'<p class="small ed-note">Limit je mesačná splátka.</p>':'';
+    return '<section class="card eg2"><div class="eg2-h"><h3>'+c.name+'</h3><b class="num" data-sum="g.'+c.id+'">'+eur(m.g[c.id])+'</b></div>'+hint+rows+'</section>';
   }).join('');
   const avail=itemList().filter(it=>!inLim(it.key));
   const pick=avail.length?CATS.filter(c=>avail.some(it=>it.cat.id===c.id)).map(c=>'<div class="gl">'+c.name+'</div><div class="subchips">'+avail.filter(it=>it.cat.id===c.id).map(it=>{const sv=stavTxt(it);return '<button type="button" class="sc" data-act="itemOn" data-key="'+it.key+'">+ '+esc(c.subs.length?it.name:c.name)+(sv?' <span class="small">'+sv+'</span>':'')+'</button>';}).join('')+'</div>').join(''):'<p class="empty">Všetky výdavky už v mesiaci sú.</p>';
+  const d=m.inc-m.tot;
   ed.innerHTML='<div class="ed-head"><button type="button" class="x" data-act="edClose" aria-label="Zavrieť">'+ic('x',18)+'</button><h2>'+(E.mode==='new'?'Nový mesiac':'Upraviť mesiac')+' · '+MN12[E.mo]+' '+E.y+'</h2></div>'+
+   '<div class="ed-sum"><div><span>Príjem</span><b data-sum="inc">'+eur(m.inc)+'</b></div><div><span>Rozpočet spolu</span><b data-sum="tot">'+eur(m.tot)+'</b></div><div class="ed-diff '+(d>=0?'ok':'bad')+'" data-sum="diff">'+(d>=0?'Zostáva ':'Nad príjem o ')+eur(Math.abs(d))+'</div></div>'+
    '<div class="ed-body">'+(E.mode==='new'?'<p class="small" style="margin:0">Predvyplnené podľa naposledy pridaného mesiaca. Upravte, čo treba, a uložte.</p>':'')+
-   '<section class="card"><h3 class="eh">Očakávaný príjem</h3>'+['J','I'].map(w=>'<div class="fr"><label for="e-inc-'+w+'">'+PEOPLE[w]+'</label><input class="num-in" type="text" inputmode="decimal" id="e-inc-'+w+'" data-k="inc.'+w+'" value="'+dr.inc[w]+'"></div>').join('')+'<div class="fr"><b>Spolu</b><b class="num">'+eur(incSum)+'</b></div></section>'+
-   '<section class="card"><h3 class="eh">Limity a dátumy platieb</h3><p class="small" style="margin:0 0 6px">Pri položke zapnite „Dátum platby“, ak sa platí v pevný deň. Zobrazí sa potom medzi nastávajúcimi platbami.</p>'+limRows+'</section>'+
-   '<section class="card"><h3 class="eh">Pridať z výdavkov</h3><p class="small" style="margin:0 0 6px">Vyberte položky zo zoznamu výdavkov, ktoré sa majú v tomto mesiaci sledovať.</p>'+pick+'</section></div>'+
+   '<section class="card eg2"><div class="eg2-h"><h3>Očakávaný príjem</h3><b class="num" data-sum="inc">'+eur(m.inc)+'</b></div>'+['J','I'].map(w=>'<div class="er er-inc"><div class="er-n">'+PEOPLE[w]+'</div><div class="er-l"><input class="num-in" type="text" inputmode="decimal" id="e-inc-'+w+'" data-k="inc.'+w+'" value="'+dr.inc[w]+'" aria-label="Príjem '+esc(PEOPLE[w])+'"><span>€</span></div></div>').join('')+'</section>'+
+   '<p class="small ed-note">Pri každej položke nastavte limit. Zapnite „Platba v pevný deň“, ak sa platí v konkrétny deň. Zobrazí sa potom medzi nastávajúcimi platbami.</p>'+head+groups+
+   '<section class="card eg2"><div class="eg2-h"><h3>Pridať z výdavkov</h3></div><p class="small ed-note">Vyberte položky zo zoznamu výdavkov, ktoré sa majú v tomto mesiaci sledovať.</p>'+pick+'</section></div>'+
    '<div class="ed-foot"><button type="button" class="btn" data-act="edSave">Uložiť mesiac</button></div>';
   ed.querySelector('.ed-body').scrollTop=st;
 }
@@ -541,6 +566,7 @@ function edInput(e){
   if(k[0]==='inc') dr.inc[k[1]]=num(v);
   else if(k[0]==='lim'){const key=k.slice(1).join('.');dr.lim[key]=v.trim()===''?null:num(v);}
   else if(k[0]==='date'){const key=k.slice(1).join('.');dr.dates[key]=Math.max(1,Math.min(31,Math.round(num(v))||1));}
+  edUpdSums();
 }
 async function saveEditor(){
   const dr=E.draft,days=new Date(E.y,E.mo+1,0).getDate();
