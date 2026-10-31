@@ -302,37 +302,36 @@ function monthLeaves(m){
   });
   return out;
 }
-function plannedRow(it,M,m){
-  const cd=curDay(M),active=M.status==='active',rest=Math.max(0,it.limit-it.spent),paid=it.limit>0&&rest<.5;
-  let st;
-  if(paid)st=pill({k:'ok',t:'Uhradené',i:'check'});
-  else if(it.spent>0)st=pill({k:'warn',t:'Zaplatené '+eur(it.spent),i:'alert'});
-  else if(!active)st=pill({k:'warn',t:'Neuhradené',i:'alert'});
-  else if(it.day<cd)st=pill({k:'bad',t:'Po termíne',i:'over'});
-  else st=pill({k:'ok',t:it.day===cd?'Dnes':relDay(it.day-cd),i:'check'});
-  const pre=Object.assign({amt:rest,note:it.name},it.pre);
-  return '<div class="pr'+(paid?' done':'')+'"><div class="pr-d num">'+it.day+'.</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.limit)+'</b>'+st+'</div>'+(paid?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">Uhradiť</button>')+'</div>';
-}
-function budgetRow(it){
-  const st=it.limit>0?status(it.spent,it.limit):{k:'ok'},left=it.limit-it.spent;
+function itemRow(it,M){
+  const cd=curDay(M),active=M.status==='active',left=it.limit-it.spent,rest=Math.max(0,left),paid=it.limit>0&&rest<.5;
+  let pl='';
+  if(it.day){
+    if(paid)pl=pill({k:'ok',t:'Uhradené',i:'check'});
+    else if(it.spent>0)pl=pill({k:'warn',t:'Zaplatené '+eur(it.spent),i:'alert'});
+    else if(!active)pl=pill({k:'warn',t:'Neuhradené',i:'alert'});
+    else if(it.day<cd)pl=pill({k:'bad',t:'Po termíne',i:'over'});
+    else pl=pill({k:'ok',t:it.day===cd?'Dnes':relDay(it.day-cd),i:'check'});
+  }
+  const st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
   const info=it.limit>0?(left>=0?'zostáva '+eur(left):'prekročené o '+eur(-left)):'bez limitu';
-  return '<div class="br"><div class="br-h"><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'</b><span class="small num">'+(it.limit>0?'z '+eur(it.limit):'')+'</span></div><button class="padd" data-act="addFor" data-key="'+it.key+'">Pridať</button></div>'+
-   (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+'<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
+  const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-d num">'+(it.day?it.day+'.':'·')+'</div><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b>'+pl+'</div>'+btn+'</div>'+
+   (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
+   '<span class="small'+(st.k==='bad'?' neg':'')+'">'+info+'</span></div>';
 }
 function viewHome(){
   const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
   const rest=sum(lv.map(x=>Math.max(0,x.limit-x.spent))),free=inc-spent-rest;
-  const planned=lv.filter(x=>x.day).sort((a,b)=>a.day-b.day),flex=lv.filter(x=>!x.day);
-  const paidN=planned.filter(x=>x.limit>0&&x.limit-x.spent<.5).length;
+  const withDay=lv.filter(x=>x.day).sort((a,b)=>a.day-b.day),noDay=lv.filter(x=>!x.day),all=withDay.concat(noDay);
+  const paidN=all.filter(x=>x.limit>0&&x.limit-x.spent<.5).length;
   const hero='<section class="card hero"><div class="hstats big3">'+
    '<div><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
    '<div><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
    '<div><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
    '<div class="row-between small" style="margin-top:8px"><span>Po úhradách všetkého ostane</span><b class="num '+(free>=0?'pos':'neg')+'">'+eur(free)+'</b></div></section>';
-  const A='<div class="blk"><h3>Plánované platby <span class="small num">uhradené '+paidN+' z '+planned.length+'</span></h3><section class="card">'+(planned.length?planned.map(x=>plannedRow(x,M,m)).join(''):'<p class="empty">Žiadne platby s pevným dňom. Dátum zapnete v Pláne pri položke.</p>')+'</section></div>';
-  const B='<div class="blk"><h3>Mesačný budget <span class="small">kedykoľvek v mesiaci</span></h3><section class="card">'+(flex.length?flex.map(budgetRow).join(''):'<p class="empty">Žiadne položky.</p>')+'</section></div>';
-  return head('Prehľad')+hero+A+B+doneBlock(m);
+  const A='<div class="blk"><h3>Plánované platby <span class="small num">vyčerpané alebo uhradené '+paidN+' z '+all.length+'</span></h3><section class="card">'+(all.length?all.map(x=>itemRow(x,M)).join(''):'<p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p>')+'</section></div>';
+  return head('Prehľad')+hero+'<div class="home2">'+A+doneBlock(m)+'</div>';
 }
 
 /* ---------- rozpočet ---------- */
