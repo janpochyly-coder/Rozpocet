@@ -162,12 +162,17 @@ const IZ={
  rake:'<path d="M3 8c3-2 6 2 9 0s6-2 9 0M3 13c3-2 6 2 9 0s6-2 9 0M3 18c3-2 6 2 9 0s6-2 9 0"/>'
 };
 const ZMAP={home:'torii',cart:'bowl',car:'bridge',heart:'sakura',drop:'wave',shirt:'fan',phone:'bell',signal:'bell',cash:'stone',trend:'mountain',archive:'mountain',shield:'rake',compass:'enso',gift:'sakura',brief:'scroll',dots:'enso',bolt:'sun',utensils:'teapot',fuel:'wave',wrench:'brush',road:'bridge',key:'bell',music:'bell',play:'fan',chat:'scroll',sparkle:'sakura',bag:'bowl',medical:'leaf',book:'scroll',child:'bamboo',user:'bamboo',users:'bamboo',card:'scroll',coin:'enso',building:'torii',luggage:'bridge',star:'sakura',percent:'leaf',palette:'brush',umbrella:'fan',clip:'scroll',grid:'sun',pie:'stone',bars:'wave',cal:'moon',file:'scroll'};
+const PXB={"heart": [".##..##.", "########", "########", "########", ".######.", "..####..", "...##...", "........"], "house": ["...##...", "..####..", ".######.", "########", ".#....#.", ".#.##.#.", ".#.##.#.", ".######."], "cart": ["#.......", "########", ".#.####.", ".######.", ".######.", "..#..#..", "..#..#..", "........"], "coin": ["..####..", ".#....#.", "#..##..#", "#..##..#", "#..##..#", "#..##..#", ".#....#.", "..####.."], "star": ["...##...", "...##...", "########", ".######.", "..####..", ".##..##.", ".#....#.", "........"], "bolt": ["....###.", "...###..", "..###...", ".######.", "...###..", "..##....", ".##.....", ".#......"], "drop": ["...##...", "...##...", "..####..", ".######.", "########", "########", ".######.", "..####.."], "shirt": ["#.####.#", "########", "########", ".######.", ".######.", ".######.", ".######.", "........"], "phone": [".######.", ".#....#.", ".#....#.", ".#....#.", ".#....#.", ".#....#.", ".#.##.#.", ".######."], "key": ["..###...", ".#...#..", ".#...#..", "..###...", "...#....", "...##...", "...#....", "...##..."], "book": [".######.", "##....##", "##.##.##", "##....##", "##.##.##", "##....##", ".######.", "........"], "user": ["..####..", ".######.", ".######.", "..####..", "...##...", ".######.", "########", "########"], "floppy": ["########", "#.####.#", "#.####.#", "########", "#......#", "#.####.#", "#.####.#", "########"], "cassette": ["########", "#......#", "#.#..#.#", "#......#", "#.####.#", "########", "#.#..#.#", "########"], "joystick": ["...##...", "...##...", "...##...", "...##...", "..####..", ".######.", "########", "########"], "tv": ["..#..#..", "...##...", ".######.", "##....##", "##....##", "##....##", ".######.", "........"], "invader": ["..#..#..", "...##...", "..####..", ".##..##.", "########", "#.####.#", "#.#..#.#", "...##..."], "battery": ["..####..", "########", "#......#", "#.####.#", "#......#", "#.####.#", "#......#", "########"], "bell": ["...##...", "..####..", "..####..", ".######.", ".######.", "########", "........", "...##..."], "car": ["........", "..####..", ".######.", "########", "########", "########", ".##..##.", ".##..##."], "cup": ["######..", "########", "######.#", "########", ".####...", "########", "........", "........"], "gear": ["...##...", "#.####.#", ".######.", "###..###", "###..###", ".######.", "#.####.#", "...##..."], "chart": ["......##", "......##", "...##.##", "...##.##", ".#.##.##", ".#.##.##", "########", "........"]};
+const pxIcon=k=>{const r=PXB[k];let d='';r.forEach((row,y)=>{for(let x=0;x<8;x++)if(row[x]==='#')d+='M'+(x*3)+' '+(y*3)+'h3v3h-3z';});return '<path fill="currentColor" stroke="none" shape-rendering="crispEdges" d="'+d+'"/>';};
+const IR={};Object.keys(PXB).forEach(k=>{IR[k]=pxIcon(k);});
+const RMAP={home:'house',cart:'cart',car:'car',heart:'heart',drop:'drop',shirt:'shirt',phone:'phone',signal:'bell',cash:'invader',trend:'chart',archive:'floppy',shield:'battery',compass:'gear',gift:'star',brief:'floppy',dots:'gear',bolt:'bolt',utensils:'cup',fuel:'drop',wrench:'gear',road:'car',key:'key',music:'bell',play:'invader',chat:'phone',sparkle:'star',bag:'cart',medical:'heart',book:'book',child:'invader',user:'user',users:'user',card:'floppy',coin:'coin',building:'house',luggage:'cassette',star:'star',percent:'coin',palette:'joystick',umbrella:'battery',clip:'cassette',grid:'tv',pie:'coin',bars:'chart',cal:'floppy',file:'floppy'};
 const styleName=()=>document.documentElement.getAttribute('data-style')||'';
 const isWest=()=>styleName()==='western';
 const isKnight=()=>styleName()==='knight';
 const isSpace=()=>styleName()==='space';
 const isZen=()=>styleName()==='zen';
-const ic=(n,s)=>{const st=styleName();const w=st==='western'?(WMAP[n]&&IW[WMAP[n]]):st==='knight'?(KMAP[n]&&IK[KMAP[n]]):st==='space'?(SMAP[n]&&IS[SMAP[n]]):st==='zen'?(ZMAP[n]&&IZ[ZMAP[n]]):null;return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
+const isRetro=()=>styleName()==='retro';
+const ic=(n,s)=>{const st=styleName();const w=st==='western'?(WMAP[n]&&IW[WMAP[n]]):st==='knight'?(KMAP[n]&&IK[KMAP[n]]):st==='space'?(SMAP[n]&&IS[SMAP[n]]):st==='zen'?(ZMAP[n]&&IZ[ZMAP[n]]):st==='retro'?(RMAP[n]&&IR[RMAP[n]]):null;return '<svg viewBox="0 0 24 24" width="'+(s||20)+'" height="'+(s||20)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(w||I[n])+'</svg>';};
 
 /* ---------- dátumy ---------- */
 const MN12=['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
@@ -649,8 +654,9 @@ const MCOL={des:'#D6457A',byv:'#2F7FD1',kon:'#E08A1A',pra:'#7A5BD6',odk:'#2A9D8F
 const WCOL={des:'#A23B2A',byv:'#4F6B8A',kon:'#C58B1B',pra:'#7A4E6B',odk:'#5E7A3A',dlh:'#8B2E16',mim:'#5C4A38'};
 const KCOL={des:'#8E2A36',byv:'#35557E',kon:'#A9812A',pra:'#5E4778',odk:'#3F6B4A',dlh:'#6E2A2A',mim:'#4A4F5C'};
 const SCOL={des:'#F2B84B',byv:'#4F8EF7',kon:'#D9A066',pra:'#B9C0D8',odk:'#E08A5A',dlh:'#8A7BD9',mim:'#5ED1C4'};
+const RCOL={des:'#FFB000',byv:'#4DD8FF',kon:'#4DFF88',pra:'#FF6AD5',odk:'#F2F25A',dlh:'#FF5A4D',mim:'#B8FFD0'};
 const ZCOL={des:'#B5523B',byv:'#4F6579',kon:'#A88A4B',pra:'#7B6A8C',odk:'#6B7A4F',dlh:'#8A4B4B',mim:'#5E7F7A'};
-const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:isKnight()?KCOL:isSpace()?SCOL:isZen()?ZCOL:MCOL)[k]});
+const GCOL=new Proxy({},{get:(t,k)=>(isWest()?WCOL:isKnight()?KCOL:isSpace()?SCOL:isZen()?ZCOL:isRetro()?RCOL:MCOL)[k]});
 function grpSums(m){const o={};DGRP.forEach(g=>o[g.id]=0);txm(m).forEach(t=>{o[grpOfKey(txKey(t))]+=t.amt;});return o;}
 function grpLims(m){const o={};DGRP.forEach(g=>o[g.id]=0);monthLeaves(m).forEach(x=>{o[grpOfKey(x.key)]+=x.limit;});return o;}
 function stackChart(){
@@ -987,17 +993,17 @@ async function doSwitch(){
 const TABS=[['home','Prehľad','grid'],['bud','Rozpočet','pie'],null,['ana','Analytika','bars'],['plan','Plán','cal']];
 const $=id=>document.getElementById(id);
 /* ---------- vzhľad: svetlý/tmavý režim a western štýl ---------- */
-function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;if(isSpace())return 'dark';return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+function effTheme(){const a=document.documentElement.getAttribute('data-theme');if(a==='light'||a==='dark')return a;if(isSpace()||isRetro())return 'dark';return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
 function applyLook(){
   const r=document.documentElement,t=store.get('rr_theme'),st=store.get('rr_style');
   if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
-  if(st==='western'||st==='knight'||st==='space'||st==='zen')r.setAttribute('data-style',st);else r.removeAttribute('data-style');
-  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='knight'?'#171A21':st==='space'?'#0A0C1C':st==='zen'?'#F6F3EC':(effTheme()==='dark'?'#0A1118':'#14202E'));
+  if(st==='western'||st==='knight'||st==='space'||st==='zen'||st==='retro')r.setAttribute('data-style',st);else r.removeAttribute('data-style');
+  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',st==='western'?'#2B1F16':st==='knight'?'#171A21':st==='space'?'#0A0C1C':st==='zen'?'#F6F3EC':st==='retro'?'#020402':(effTheme()==='dark'?'#0A1118':'#14202E'));
 }
 function lookCtl(){
-  const dark=effTheme()==='dark',w=isWest(),k=isKnight(),sp=isSpace(),zn=isZen();
+  const dark=effTheme()==='dark',w=isWest(),k=isKnight(),sp=isSpace(),zn=isZen(),rt=isRetro();
   return '<button type="button" class="tbtn" data-act="themeTog" aria-label="'+(dark?'Prepnúť na svetlý režim':'Prepnúť na tmavý režim')+'" title="'+(dark?'Svetlý režim':'Tmavý režim')+'">'+ic(dark?'sun':'moon',20)+'</button>'+
-   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+'<button type="button" class="lantern" data-act="knightTog" role="switch" aria-checked="'+k+'" aria-label="Rytiersky vzhľad" title="Rytiersky vzhľad (lampáš)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="lt-ring" d="M9.500 4.500V3.500a2.500 2.500 0 0 1 5 0v1"/><path class="lt-body" d="M7.500 6h9l1.200 3v7.500L16.500 20h-9l-1.200-3.500V9z"/><path class="lt-line" d="M6.300 9h11.400M6.300 16.500h11.400M12 6v14"/><path class="lt-flame" d="M12 17.500c-2.200-1.300-2.400-3.500-.8-5.800.6 1 1.100 1.300 1.700 1.400.2-1 .7-1.800 1.300-2.400.9 2.700.5 5.500-2.200 6.800z"/></svg></button>'+'<button type="button" class="planetbtn" data-act="spaceTog" role="switch" aria-checked="'+sp+'" aria-label="Vesmírny vzhľad" title="Vesmírny vzhľad (planéta)"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle class="pl-body" cx="12" cy="12" r="5.200"/><ellipse class="pl-ring" cx="12" cy="12" rx="10.500" ry="3.400" transform="rotate(-24 12 12)"/><circle class="pl-star" cx="4" cy="5" r=".7"/><circle class="pl-star" cx="20.500" cy="19" r=".6"/></svg></button>'+'<button type="button" class="zenbtn" data-act="zenTog" role="switch" aria-checked="'+zn+'" aria-label="Zen vzhľad" title="Zen vzhľad (pečať)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="zn-enso" d="M17.200 6.400A7.500 7.500 0 1 0 19.200 13"/><circle class="zn-dot" cx="12" cy="12" r="1.200"/></svg></button>';
+   '<button type="button" class="wlever" data-act="styleTog" role="switch" aria-checked="'+w+'" aria-label="Western vzhľad" title="Western vzhľad (potiahni páku)"><i class="wl-slot"></i><i class="wl-knob"></i></button>'+'<button type="button" class="lantern" data-act="knightTog" role="switch" aria-checked="'+k+'" aria-label="Rytiersky vzhľad" title="Rytiersky vzhľad (lampáš)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="lt-ring" d="M9.500 4.500V3.500a2.500 2.500 0 0 1 5 0v1"/><path class="lt-body" d="M7.500 6h9l1.200 3v7.500L16.500 20h-9l-1.200-3.500V9z"/><path class="lt-line" d="M6.300 9h11.400M6.300 16.500h11.400M12 6v14"/><path class="lt-flame" d="M12 17.500c-2.200-1.300-2.400-3.500-.8-5.800.6 1 1.100 1.300 1.700 1.400.2-1 .7-1.800 1.300-2.400.9 2.700.5 5.500-2.200 6.800z"/></svg></button>'+'<button type="button" class="planetbtn" data-act="spaceTog" role="switch" aria-checked="'+sp+'" aria-label="Vesmírny vzhľad" title="Vesmírny vzhľad (planéta)"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle class="pl-body" cx="12" cy="12" r="5.200"/><ellipse class="pl-ring" cx="12" cy="12" rx="10.500" ry="3.400" transform="rotate(-24 12 12)"/><circle class="pl-star" cx="4" cy="5" r=".7"/><circle class="pl-star" cx="20.500" cy="19" r=".6"/></svg></button>'+'<button type="button" class="zenbtn" data-act="zenTog" role="switch" aria-checked="'+zn+'" aria-label="Zen vzhľad" title="Zen vzhľad (pečať)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path class="zn-enso" d="M17.200 6.400A7.500 7.500 0 1 0 19.200 13"/><circle class="zn-dot" cx="12" cy="12" r="1.200"/></svg></button>'+'<button type="button" class="knobbtn" data-act="retroTog" role="switch" aria-checked="'+rt+'" aria-label="Retro vzhľad" title="Retro vzhľad (otoč gombík)"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><circle class="kb-tick" cx="6" cy="24" r="1"/><circle class="kb-tick" cx="26" cy="24" r="1"/><circle class="kb-tick" cx="16" cy="4.500" r="1"/><g class="kb-knob"><circle cx="16" cy="16" r="9" class="kb-body"/><path d="M16 8.500v6" class="kb-notch"/></g></svg><i class="kb-led"></i></button>';
 }
 /* preklad do western slovníka (len pri zapnutom western vzhľade) */
 const WDICT={
@@ -1051,13 +1057,23 @@ const ZDICT={
  'Rozpočet mesiaca':'Rovnováha mesiaca','Kam idú peniaze':'Kam plynú peniaze','História':'Spomienky','Aktívny mesiac':'Terajší mesiac'
 };
 const ZRX=[];
+const RDICT={
+ 'Prehľad':'Konzola','Rozpočet':'Pamäť','Analytika':'Logy','Plán':'Systém',
+ 'Rodinný rozpočet':'RODINNÝ OS',
+ 'Plánované platby':'Naplánované úlohy','Vykonané platby':'Protokol','Najbližšie platby':'Fronta',
+ 'K dispozícii':'Voľná pamäť','Zostáva uhradiť':'V rade','Minuté':'Spotrebované',
+ 'Pridať zápis':'Nový záznam','Uhradiť':'Spustiť','Nový výdavok':'Nový záznam',
+ 'Desiatky':'Desiatok','Bývanie':'Domov','Konzum':'Spotreba','Pravidelné':'Cron','Odkladanie':'Záloha','Mimoriadne':'Výnimky',
+ 'Rozpočet mesiaca':'Pamäť mesiaca','Kam idú peniaze':'Kam tečú dáta','História':'Archív','Aktívny mesiac':'Bežiaci mesiac'
+};
+const RRX=[];
 const WRX=[
  [/^uhradené (\d+) z (\d+)$/,'vybavené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
 ];
 const KRX=[
  [/^uhradené (\d+) z (\d+)$/,'odvedené $1 z $2'],[/^(\d+) po termíne$/,'$1 po lehote'],[/^(\d+) v termíne$/,'$1 v lehote'],[/^(\d+) pred termínom$/,'$1 pred lehotou'],[/^(\d+) položiek$/,'$1 zápisov'],[/^(\d+) položky$/,'$1 zápisy'],[/^(\d+) položka$/,'$1 zápis']
 ];
-const activeDict=()=>isWest()?[WDICT,WRX]:isKnight()?[KDICT,KRX]:isSpace()?[SDICT,SRX]:isZen()?[ZDICT,ZRX]:null;
+const activeDict=()=>isWest()?[WDICT,WRX]:isKnight()?[KDICT,KRX]:isSpace()?[SDICT,SRX]:isZen()?[ZDICT,ZRX]:isRetro()?[RDICT,RRX]:null;
 let wBusy=false;
 function wTr(str){
   const ad=activeDict();if(!ad)return str;
@@ -1101,6 +1117,7 @@ function toggleStyle(name,btn){
     store.set('rr_style',on?name:'modern');applyLook();
     unwesternize();
     renderTabs();render(true);if(on)westernize(document.body);
+    if(on&&name==='retro'){const ph=document.getElementById('phone');if(ph){ph.classList.remove('crt-on');void ph.offsetWidth;ph.classList.add('crt-on');setTimeout(()=>ph.classList.remove('crt-on'),1100);}}
   });
   setTimeout(()=>{leverBusy=false;},1400);
 }
@@ -1251,6 +1268,7 @@ document.addEventListener('click',e=>{
   else if(a==='knightTog'){toggleStyle('knight',el);}
   else if(a==='spaceTog'){toggleStyle('space',el);}
   else if(a==='zenTog'){toggleStyle('zen',el);}
+  else if(a==='retroTog'){toggleStyle('retro',el);}
   else if(a==='ptab'){S.ptab=el.dataset.v;S.itemOpen=null;render();}
   else if(a==='pcat'){S.openPCat[el.dataset.c]=!S.openPCat[el.dataset.c];render(true);}
   else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
