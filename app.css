@@ -524,3 +524,17 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
   .cols>.bud2{column-span:all;display:grid;grid-template-columns:minmax(300px,2fr) minmax(0,3fr);grid-template-areas:"t r" "i r";grid-template-rows:auto 1fr;gap:20px 28px;align-items:start;break-inside:auto}
   .bud2-t{grid-area:t}.bud2-r{grid-area:r}.bud2-i{grid-area:i}
 }
+
+/* --- ikonky pri položkách --- */
+.gi{background:color-mix(in srgb,var(--gc) 14%,var(--surface));color:var(--gc);width:34px;height:34px;border-radius:10px}
+.it-top{grid-template-columns:34px minmax(0,1fr) auto auto}
+.cg-h{grid-template-columns:18px 34px minmax(0,1fr) auto}
+.cg-b{padding-left:0}
+.ir{display:flex;align-items:center;gap:10px}
+.ir .nm{flex:1;min-width:0}
+.ir .gi{width:28px;height:28px;border-radius:8px}
+.er-n{display:flex;align-items:center;gap:10px}
+.er-n .gi{width:28px;height:28px;border-radius:8px;flex:none}
+.ern-t{display:flex;flex-direction:column;min-width:0}
+.ern-t small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.li .gi{width:36px;height:36px}

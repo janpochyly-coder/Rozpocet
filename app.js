@@ -2,6 +2,32 @@
 (function(){
 'use strict';
 const I={
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ signal:'<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r=".8"/>',
+ utensils:'<path d="M6 3v7a2 2 0 0 0 2 2v9M10 3v7a2 2 0 0 1-2 2M18 21V3c-3 1-4 4-4 8h4"/>',
+ fuel:'<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M6 8h6M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5V17a1.5 1.5 0 0 0 3 0V8l-3-3"/>',
+ wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+ road:'<path d="M8 3L4 21M16 3l4 18M12 4v3M12 10v3M12 16v4"/>',
+ clip:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 14l2 2 4-4"/>',
+ umbrella:'<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v6a2 2 0 0 0 4 0"/>',
+ palette:'<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.6-1.2.2-2.5 1.6-2.5H17a4 4 0 0 0 4-4C21 7 17 3 12 3z"/><circle cx="7.5" cy="11" r=".9"/><circle cx="10.5" cy="7.5" r=".9"/><circle cx="15" cy="7.8" r=".9"/>',
+ play:'<rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/>',
+ music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+ chat:'<path d="M21 12a8 8 0 0 1-11.7 7L3 21l2-5.3A8 8 0 1 1 21 12z"/>',
+ sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 17v4M17 19h4"/>',
+ bag:'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+ medical:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/>',
+ book:'<path d="M4 4h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v15h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4z"/><path d="M12 5v15"/>',
+ child:'<circle cx="12" cy="8" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/>',
+ user:'<circle cx="12" cy="8" r="3.5"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>',
+ users:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3 20v-1a5 5 0 0 1 10 0v1M15 14.5a4 4 0 0 1 6 3.5v2"/>',
+ card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+ coin:'<circle cx="12" cy="12" r="9"/><path d="M14.5 9a3 3 0 0 0-5 1c0 3 5 1.5 5 4.5a3 3 0 0 1-5.5 1M12 6.5v1.5M12 16v1.5"/>',
+ building:'<path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 7h3M8 11h3M8 15h3"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
+ luggage:'<rect x="5" y="7" width="14" height="14" rx="2"/><path d="M9 7V4h6v3M9 11v6M15 11v6"/>',
+ star:'<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.2 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>',
+ percent:'<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
  cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 8H6"/>',
  car:'<path d="M3 13l2-6h14l2 6v5h-3v-2H6v2H3z"/><path d="M3 13h18"/>',
@@ -77,7 +103,10 @@ const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const DGRP=[{id:'des',name:'Desiatky'},{id:'byv',name:'Bývanie'},{id:'kon',name:'Konzum'},{id:'pra',name:'Pravidelné'},{id:'odk',name:'Odkladanie'},{id:'dlh',name:'Dlhy'},{id:'mim',name:'Mimoriadne'}];
 const GMAP_CAT={des:'des',byv:'byv',jed:'kon',dro:'kon',obl:'kon',app:'pra',aut:'pra',pod:'pra',odk:'odk',inv:'odk',rez:'odk',poz:'dlh',dlh:'dlh',dov:'mim',vyl:'mim',osl:'mim',ost:'mim'};
 const GMAP_KEY={'aut.nafta':'kon'};
+const IKEY={'des':'heart','byv.najom':'key','byv.elektrina':'bolt','byv.o2':'signal','aut.nafta':'fuel','aut.servis':'wrench','aut.dialnicna':'road','aut.stk':'clip','aut.poistka':'umbrella','app.adobe':'palette','app.ytb':'play','app.spotify':'music','app.chatgpt':'chat','app.claude':'sparkle','app.shopify':'bag','poz.prima':'card','poz.melon':'coin','dlh.rodicia':'users','dlh.blazka':'user','dlh.brano':'user','dlh.h1':'building','dlh.h2':'building','dlh.realbyt':'building','dlh.orange':'signal','dlh.vszp':'medical','odk.deti':'child','odk.rodicia':'users','rez.r1':'shield','rez.r2':'shield','pod.vszp':'medical','pod.rozvoj':'book','dov':'luggage'};
 const grpOfKey=key=>GMAP_KEY[key]||GMAP_CAT[key.split('.')[0]]||'mim';
+function iconOf(key){if(IKEY[key])return IKEY[key];const p=key.split('.');if(p[0]==='jed')return 'utensils';const c=CAT[p[0]];return c?c.icon:'dots';}
+const gIco=(key,sz)=>'<span class="ico gi g-'+grpOfKey(key)+'">'+ic(iconOf(key),sz||18)+'</span>';
 const DEFLIM={'poz.prima':540,'poz.melon':180,'byv.najom':280,'byv.elektrina':50,'byv.o2':200,
  'jed.w0':125,'jed.w1':125,'jed.w2':125,'jed.w3':125,'dro':100,'obl':100,
  'aut.nafta':150,'aut.servis':45,'aut.dialnicna':10,'aut.stk':10,'aut.poistka':15,
@@ -237,7 +266,7 @@ function txLabel(t){
   return c.name+(s?' · '+(c.kind==='weeks'?'týždeň '+weekInfo(t.m,+t.sub[1]).n:s.name):'');
 }
 function txRows(arr){
-  return '<div class="list">'+arr.map(t=>'<div class="li"><span class="ico">'+ic(CAT[t.cat].icon,18)+'</span><div class="t"><b>'+esc(t.note||CAT[t.cat].name)+'</b><span>'+esc(txLabel(t))+' · '+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num">'+eur2(t.amt)+'</span></div>').join('')+'</div>';
+  return '<div class="list">'+arr.map(t=>'<div class="li">'+gIco(txKey(t))+'<div class="t"><b>'+esc(t.note||CAT[t.cat].name)+'</b><span>'+esc(txLabel(t))+' · '+dl(t)+'</span></div>'+dot(t.who,true)+'<span class="a num">'+eur2(t.amt)+'</span></div>').join('')+'</div>';
 }
 function leaves(m){
   const ss=bySub(m),cc=byCat(m),out=[];
@@ -335,7 +364,7 @@ function itemRow(it,M){
   const left=it.limit-it.spent,stt=itemState(it,M),paid=stt==='paid',st=it.limit>0?status(it.spent,it.limit):{k:'ok'};
   const btn=(it.day&&paid)?'<span></span>':'<button class="padd" data-act="addFor" data-key="'+it.key+'">'+(it.day?'Uhradiť':'Pridať')+'</button>';
   const dcls=stt==='late'?' d-late':stt==='soon'?' d-soon':'';
-  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top"><div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+(it.day?(it.sub?' · ':'')+'<span class="dtx '+(stt==='late'?'late':stt==='soon'?'soon':'')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
+  return '<div class="it'+(it.day&&paid?' done':'')+'"><div class="it-top">'+gIco(it.key)+'<div class="pr-n"><b>'+esc(it.name)+'</b><span>'+esc(it.sub)+(it.day?(it.sub?' · ':'')+'<span class="dtx '+(stt==='late'?'late':stt==='soon'?'soon':'')+'">'+it.day+'. '+(M.mo+1)+'.</span>':'')+'</span></div><div class="pr-a"><b class="num">'+eur(it.spent)+'<span class="small"> '+(it.limit>0?'/ '+eur(it.limit):'')+'</span></b></div>'+btn+'</div>'+
    (it.limit>0?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
    '</div>';
 }
@@ -355,7 +384,7 @@ function viewHome(){
     const sp=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),open=!!S.openCats[g.id],st=lim>0?status(sp,lim):{k:'ok'};
     const cnt={};its.forEach(x=>{const k=itemState(x,M);cnt[k]=(cnt[k]||0)+1;});
     const bub=['late','over','soon','wait','flex','paid'].filter(k=>cnt[k]).map(k=>'<span class="bub '+STL[k][1]+'">'+cnt[k]+' '+STL[k][0]+'</span>').join('');
-    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="cg-n"><span class="nl"><b>'+g.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
+    return '<div class="cg"><button type="button" class="cg-h" data-act="catTog" data-c="'+g.id+'" aria-expanded="'+open+'"><span class="chev" aria-hidden="true"></span><span class="ico gi g-'+g.id+'">'+ic(GICON[g.id]||'dots',18)+'</span><span class="cg-n"><span class="nl"><b>'+g.name+'</b>'+bub+'</span></span><span class="pr-a"><b class="num">'+eur(sp)+(lim>0?'<span class="small"> / '+eur(lim)+'</span>':'')+'</b></span></button>'+
      (lim>0?'<div class="track cg-t" role="img" aria-label="'+g.name+': '+eur(sp)+' z '+eur(lim)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(sp,lim)+'%"></div></div>':'')+
      (open?'<div class="cg-b">'+its.map(x=>itemRow(x,M)).join('')+'</div>':'')+'</div>';
   }).join('');
@@ -392,7 +421,7 @@ function catVisible(c,m,cc){
   if(cc[c.id]>0)return true;
   return c.subs.length?c.subs.some(x=>isIn(m,c.id+'.'+x.id)):isIn(m,c.id);
 }
-const GICON={des:'heart',byv:'home',kon:'cart',pra:'phone',odk:'archive',dlh:'cash',mim:'sun'};
+const GICON={des:'percent',byv:'home',kon:'cart',pra:'phone',odk:'archive',dlh:'cash',mim:'star'};
 function budItem(it,m){
   const c=it.c,key=it.key,pr=key.split('.'),has=it.limit>0||getLim(m,key)!==null;
   const ds=c.kind==='debt'?c.subs.find(x=>x.id===pr[1]):null;
@@ -402,7 +431,7 @@ function budItem(it,m){
   const st=has?status(it.spent,it.limit):null,step=c.kind==='debt'?25:(has&&it.limit>=100?10:5);
   const left=it.limit-it.spent;
   const ctl=c.kind==='tithe'?'<span class="small">sám, 10 % z príjmu</span>':c.kind==='manual'?'':stepper('lim','data-c="'+pr[0]+'"'+(pr[1]?' data-s="'+pr[1]+'"':''),it.limit||0,'limit',step);
-  return '<div class="bi"><span class="ico bi-i">'+ic(c.icon,18)+'</span><div class="bi-n"><b>'+esc(it.name)+'</b><span>'+(info?esc(info):'&nbsp;')+'</span></div><div class="bi-c">'+ctl+'</div>'+
+  return '<div class="bi"><span class="ico bi-i">'+ic(iconOf(key),18)+'</span><div class="bi-n"><b>'+esc(it.name)+'</b><span>'+(info?esc(info):'&nbsp;')+'</span></div><div class="bi-c">'+ctl+'</div>'+
    '<div class="bi-b">'+(has?'<div class="track" role="img" aria-label="'+esc(it.name)+': '+eur(it.spent)+' z '+eur(it.limit)+'"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+
    '<span class="bi-s num"><b>'+eur(it.spent)+'</b>'+(has?' z '+eur(it.limit)+' · '+(left>=0?'zostáva '+eur(left):'<span class="neg">nad o '+eur(-left)+'</span>'):' · bez limitu')+'</span></div></div>';
 }
@@ -539,7 +568,7 @@ function itemsBlock(){
             '<div class="btns"><button type="button" class="btn sm" data-act="itemSave">Uložiť</button></div></div>';
         }
       }
-      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'"><span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
+      return '<button class="ir" data-act="itemOpen" data-key="'+it.key+'" aria-expanded="'+open+'">'+gIco(it.key,16)+'<span class="nm">'+esc(c.subs.length?it.name:c.name)+(c.subs.length?'<small class="cn"> · '+esc(c.name)+'</small>':'')+'</span><span class="num st">'+(v.tracked?'Stav '+eur(v.value)+(v.auto&&!it.debt?' · auto':''):'<i>bez stavu</i>')+'</span></button>'+panel;
     }).join('');
     return '<div class="ig"><div class="ig-h">'+g.name+'</div>'+rows+'</div>';
   }).join('');
@@ -620,12 +649,12 @@ function renderEditor(keep){
   const limCell=(id,key,aria)=>{const v=dr.lim[key];return '<div class="er-l"><input class="num-in" type="text" inputmode="decimal" id="'+id+'" data-k="lim.'+key+'" value="'+(v===null||v===undefined?'':v)+'" placeholder="bez limitu" aria-label="Limit '+esc(aria)+'"><span>€</span></div>';};
   const rm=(key,label)=>'<button type="button" class="er-x" data-act="itemOff" data-key="'+key+'" aria-label="Odstrániť z mesiaca: '+esc(label)+'">'+ic('x',16)+'</button>';
   const inLim=k=>Object.prototype.hasOwnProperty.call(dr.lim,k);
-  const row=(name,hint,lim,date,x)=>'<div class="er"><div class="er-n">'+name+(hint?'<small>'+hint+'</small>':'')+'</div>'+lim+date+(x||'<span></span>')+'</div>';
+  const row=(name,hint,lim,date,x,key)=>'<div class="er"><div class="er-n">'+(key?gIco(key,16):'')+'<span class="ern-t">'+name+(hint?'<small>'+hint+'</small>':'')+'</span></div>'+lim+date+(x||'<span></span>')+'</div>';
   const head='<div class="er er-h"><div>Položka</div><div>Limit</div><div>Platba v pevný deň</div><span></span></div>';
   const entries=[];
   CATS.filter(c=>c.kind!=='manual').forEach(c=>{
     if(c.kind==='tithe'){
-      entries.push({key:'des',html:row(c.name,'10 % z príjmu','<div class="er-l er-auto">'+eur(m.inc*.1)+'</div>',dateCell('des',c.name))});
+      entries.push({key:'des',html:row(c.name,'10 % z príjmu','<div class="er-l er-auto">'+eur(m.inc*.1)+'</div>',dateCell('des',c.name),'','des')});
     } else if(c.subs.length){
       c.subs.forEach((x,k)=>{
         const key=c.id+'.'+x.id;
@@ -633,11 +662,11 @@ function renderEditor(keep){
         const sv=c.kind==='weeks'?'':stavTxt({key:key,debt:c.kind==='debt',sub:x});
         const name=c.kind==='weeks'?'Jedlo · týždeň '+weekInfoM(M,k).n:esc(x.name);
         const hint=[c.kind==='weeks'?weekInfoM(M,k).range:c.name,sv,c.kind==='debt'?'limit = mesačná splátka':''].filter(Boolean).join(' · ');
-        entries.push({key:key,html:row(name,hint,limCell('e-lim-'+c.id+'-'+x.id,key,x.name),c.kind==='weeks'?'<div class="er-d"><span class="small">—</span></div>':dateCell(key,x.name),c.kind==='weeks'?'':rm(key,x.name))});
+        entries.push({key:key,html:row(name,hint,limCell('e-lim-'+c.id+'-'+x.id,key,x.name),c.kind==='weeks'?'<div class="er-d"><span class="small">—</span></div>':dateCell(key,x.name),c.kind==='weeks'?'':rm(key,x.name),key)});
       });
     } else if(inLim(c.id)){
       const sv=stavTxt({key:c.id,debt:false});
-      entries.push({key:c.id,html:row(c.name,sv,limCell('e-lim-'+c.id,c.id,c.name),dateCell(c.id,c.name),rm(c.id,c.name))});
+      entries.push({key:c.id,html:row(c.name,sv,limCell('e-lim-'+c.id,c.id,c.name),dateCell(c.id,c.name),rm(c.id,c.name),c.id)});
     }
   });
   const groups=DGRP.map(g=>{
