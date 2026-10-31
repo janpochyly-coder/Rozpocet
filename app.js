@@ -92,7 +92,7 @@ const DEFPLAN=[
  {d:20,name:'Podnikanie – VšZP',key:'pod.vszp',amt:120},{d:22,name:'Podnikanie – Rozvoj',key:'pod.rozvoj',amt:50}
 ];
 const S={
-  tab:'home', openCats:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
+  tab:'home', openCats:{}, openBud:{}, doneN:5, doneSort:'new', month:5, anaTab:'ana', expanded:null, trend:'chart', grp:'all', incAll:false, upAll:false, doneAll:false, repAll:false, confirm:false,
   months:[], tx:[], incTx:[], debts:[], members:[], me:'J', hh:null, loaded:false, itemOpen:null, items:{}, busy:0, code:null, sig:null, mode:'exp', draft:{cat:'jed',sub:'',who:'J'}, rep:{J:true,I:true}
 };
 
@@ -392,16 +392,31 @@ function catVisible(c,m,cc){
   if(cc[c.id]>0)return true;
   return c.subs.length?c.subs.some(x=>isIn(m,c.id+'.'+x.id)):isIn(m,c.id);
 }
+const GICON={des:'heart',byv:'home',kon:'cart',pra:'phone',odk:'archive',dlh:'cash',mim:'sun'};
+function budSubRow(it,m){
+  const c=it.c,key=it.key,pr=key.split('.'),has=it.limit>0||getLim(m,key)!==null;
+  const sv=stavTxt({key:key,debt:c.kind==='debt',sub:c.kind==='debt'?c.subs.find(x=>x.id===pr[1]):null});
+  const dbt=c.kind==='debt'?'zostatok '+eur(debtBal(c.subs.find(x=>x.id===pr[1])||{bal:0,asOf:TODAY,id:''})):'';
+  const info=[it.sub&&it.sub!==c.name?it.sub:(c.name!==it.name?c.name:''),sv,dbt,it.day?'platba '+it.day+'.':''].filter(Boolean).join(' · ');
+  const head='<div class="nm">'+esc(it.name)+'<span class="num">'+eur(it.spent)+(has?' z '+eur(it.limit):' · bez limitu')+(info?' · '+esc(info):'')+'</span></div>';
+  if(c.kind==='tithe')return '<div class="sub">'+head+'<span class="small">sám: 10 % z príjmu</span></div>';
+  if(c.kind==='manual')return '<div class="sub">'+head+'</div>';
+  const st=has?status(it.spent,it.limit):null,step=c.kind==='debt'?25:(has&&it.limit>=100?10:5);
+  return '<div class="sub">'+head+stepper('lim','data-c="'+pr[0]+'"'+(pr[1]?' data-s="'+pr[1]+'"':''),it.limit||0,'limit',step)+(has?'<div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(it.spent,it.limit)+'%"></div></div>':'')+'</div>';
+}
 function viewBudgets(){
-  const m=S.month, cc=byCat(m);
-  const gl=k=>CATS.filter(c=>c.grp===k);
-  const sel=S.grp, list=(sel==='all'?CATS:gl(sel)).filter(c=>catVisible(c,m,cc));
-  const g=grpStats(m,list), left=g.limit-g.spent, st=status(g.spent,g.limit);
-  const tabs=[['all','Spolu']].concat(GRPS).map(x=>'<button data-act="grp" data-g="'+x[0]+'" aria-pressed="'+(S.grp===x[0])+'">'+x[1]+'</button>').join('');
-  const summary='<section class="card"><div class="small">'+(left>=0?'Zostáva':'Prekročené o')+'</div><div class="big2 num">'+eur(Math.abs(left))+'</div><div class="track"><div class="fill '+(st.k==='ok'?'':st.k)+'" style="width:'+pctOf(g.spent,g.limit)+'%"></div></div><div class="row-between small" style="margin-top:8px"><span>Minuté <b class="num">'+eur(g.spent)+'</b></span><span class="num">z '+eur(g.limit)+'</span></div></section>';
-  const body=sel==='all'?GRPS.map(gr=>{const l=gl(gr[0]),s2=grpStats(m,l);return '<div class="blk"><h3>'+gr[1]+' <span class="small num">'+eur(s2.spent)+' z '+eur(s2.limit)+'</span></h3><section class="card bud">'+l.filter(c=>catVisible(c,m,cc)).map(c=>catRow(c,m,cc)).join('')+'</section></div>';}).join(''):'<section class="card bud">'+list.map(c=>catRow(c,m,cc)).join('')+'</section>';
+  const m=S.month,lv=monthLeaves(m),spentAll=sum(lv.map(x=>x.spent)),limAll=sum(lv.map(x=>x.limit)),left=limAll-spentAll,st0=status(spentAll,limAll);
+  const summary='<section class="card"><div class="small">'+(left>=0?'Zostáva':'Prekročené o')+'</div><div class="big2 num">'+eur(Math.abs(left))+'</div><div class="track"><div class="fill '+(st0.k==='ok'?'':st0.k)+'" style="width:'+pctOf(spentAll,limAll)+'%"></div></div><div class="row-between small" style="margin-top:8px"><span>Minuté <b class="num">'+eur(spentAll)+'</b></span><span class="num">z '+eur(limAll)+'</span></div></section>';
+  const groups=DGRP.map(g=>{
+    const its=lv.filter(x=>grpOfKey(x.key)===g.id);if(!its.length)return '';
+    const v=sum(its.map(x=>x.spent)),lim=sum(its.map(x=>x.limit)),s=status(v,lim),op=!!S.openBud[g.id];
+    const right=lim>0?'<b>'+eur(v)+'</b> <i>/ '+eur(lim)+'</i>':'<b>'+eur(v)+'</b> <i>bez limitu</i>';
+    const note=g.id==='dlh'?'<p class="small" style="margin:0 0 6px">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách: '+eur(leftover(m))+'. Zostatok dlhov spolu: '+eur(sum(CAT.dlh.subs.map(debtBal)))+'.</p>':'';
+    const manual=its.filter(x=>x.c.kind==='manual').length&&txm(m).some(t=>t.cat==='ost')?'<div class="subs">'+txRows(txm(m).filter(t=>t.cat==='ost').sort(byDateDesc))+'</div>':'';
+    return '<div class="b"><button class="b-head" data-act="bTog" data-c="'+g.id+'" aria-expanded="'+op+'"><div class="b-top"><span class="ico">'+ic(GICON[g.id]||'dots',18)+'</span><div class="t"><b>'+g.name+'</b>'+flag(s)+'</div><span class="num rt2">'+right+'</span></div>'+(lim>0?'<div class="track thin"><div class="fill '+(s.k==='ok'?'':s.k)+'" style="width:'+pctOf(v,lim)+'%"></div></div>':'')+'</button>'+(op?'<div class="subs">'+note+its.map(x=>budSubRow(x,m)).join('')+'</div>'+manual:'')+'</div>';
+  }).join('');
   const raw=rawPlan(m),inc=income(m);
-  return head('Rozpočet')+'<div class="seg full" role="group" aria-label="Skupina výdavkov">'+tabs+'</div>'+summary+(sel==='all'?incomeBlock(m):'')+body+
+  return head('Rozpočet')+summary+incomeBlock(m)+'<div class="blk"><h3>Kategórie</h3><section class="card bud">'+groups+'</section></div>'+
     '<p class="note">Zmena limitu platí len pre mesiac '+mname(m)+'. Celý mesiac upravíte v karte Plán.</p>'+(raw>inc?'<div class="warnbox">Plán bez dlhov prevyšuje príjem o '+eur(raw-inc)+'.</div>':'');
 }
 
@@ -740,6 +755,7 @@ document.addEventListener('click',e=>{
   else if(a==='rep'){S.rep[el.dataset.w]=!S.rep[el.dataset.w];render(true);}
   else if(a==='upAll'){S.upAll=!S.upAll;render(true);}
   else if(a==='doneAll'){S.doneAll=!S.doneAll;render(true);}
+  else if(a==='bTog'){S.openBud[el.dataset.c]=!S.openBud[el.dataset.c];render(true);}
   else if(a==='catTog'){S.openCats[el.dataset.c]=!S.openCats[el.dataset.c];render(true);}
   else if(a==='dsort'){S.doneSort=el.dataset.v;S.doneN=5;render(true);}
   else if(a==='incAll'){S.incAll=!S.incAll;render(true);}
