@@ -1238,3 +1238,14 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
   .pctl .subchips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
   .pctl .subchips .sc{justify-content:center;padding-left:6px;padding-right:6px}
 }
+
+/* potiahnutie na obnovenie */
+.ptr{position:relative;height:0;overflow:visible;z-index:5;pointer-events:none;--p:0}
+.ptr i{position:absolute;left:50%;top:58px;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:var(--surface);border:2px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:0;transform:translateY(calc(var(--p)*14px - 14px)) rotate(calc(var(--p)*270deg));transition:opacity .15s;display:block}
+.ptr i::after{content:"";position:absolute;inset:6px;border-radius:50%;border:3px solid var(--muted);border-top-color:transparent}
+.ptr.pull i{opacity:calc(.25 + var(--p))}
+.ptr.ready i::after{border-color:var(--bar);border-top-color:transparent}
+.ptr.spin i{opacity:1;transform:translateY(6px);transition:transform .2s;animation:ptrspin .8s linear infinite}
+.ptr.spin i::after{border-color:var(--bar);border-top-color:transparent}
+@keyframes ptrspin{to{transform:translateY(6px) rotate(360deg)}}
+@media (min-width:1000px){.ptr{display:none}}
