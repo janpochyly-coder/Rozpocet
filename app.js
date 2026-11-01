@@ -1347,34 +1347,40 @@ async function poll(){
   try{const r=await loadAll();if(r==='ok')render(true);}catch(e){console.error(e);}
 }
 
-// potiahnutie obrazovky nadol = obnovenie údajov
+// potiahnutie obrazovky nadol = obnovenie údajov (obsah ide za prstom s odporom, vráti sa pružne)
 (function(){
   const sc=$('screen');if(!sc)return;
   const ind=document.createElement('div');ind.className='ptr';ind.setAttribute('aria-hidden','true');ind.innerHTML='<i></i>';
   sc.parentNode.insertBefore(ind,sc);
   let y0=null,dy=0,busy=false;
-  const TH=70;
+  const TH=72,HOLD=54,MAXD=120;
   const blocked=()=>busy||!S.loaded||S.idlg||!$('sheet').hidden||!$('editor').hidden||!$('gate').hidden;
-  sc.addEventListener('touchstart',e=>{y0=(!blocked()&&sc.scrollTop<=0&&e.touches.length===1)?e.touches[0].clientY:null;dy=0;},{passive:true});
+  const damp=d=>MAXD*(1-Math.exp(-d/(MAXD*1.4)));            // plynulý odpor
+  const setD=d=>{sc.style.transform=d?'translate3d(0,'+d+'px,0)':'';ind.style.setProperty('--p',Math.min(1,d/HOLD));ind.style.setProperty('--d',d+'px');};
+  const spring=()=>{sc.classList.add('ptr-back');setD(0);setTimeout(()=>sc.classList.remove('ptr-back'),380);};
+  sc.addEventListener('touchstart',e=>{if(sc.classList.contains('ptr-back'))return;y0=(!blocked()&&sc.scrollTop<=0&&e.touches.length===1)?e.touches[0].clientY:null;dy=0;},{passive:true});
   sc.addEventListener('touchmove',e=>{
     if(y0===null)return;
     dy=e.touches[0].clientY-y0;
-    if(dy<=0||sc.scrollTop>0){ind.style.setProperty('--p',0);ind.classList.remove('pull');return;}
-    const p=Math.min(1,dy/TH);
-    ind.classList.add('pull');ind.classList.toggle('ready',p>=1);
-    ind.style.setProperty('--p',p);
+    if(dy<=0||sc.scrollTop>0){if(dy<=0){setD(0);ind.classList.remove('pull','ready');}return;}
+    const d=damp(dy);
+    ind.classList.add('pull');ind.classList.toggle('ready',d>=HOLD*.98);
+    setD(d);
   },{passive:true});
   const end=async()=>{
     if(y0===null)return;
-    const go=dy>=TH&&sc.scrollTop<=0;y0=null;
-    if(!go){ind.classList.remove('pull','ready');ind.style.setProperty('--p',0);return;}
-    busy=true;ind.classList.add('spin');
-    try{const r=await loadAll(false,true);if(r!=='gate'){render(true);toast('Aktualizované');}}
-    catch(e){console.error(e);toast('Nepodarilo sa obnoviť. Skontrolujte internet.',true);}
-    busy=false;ind.classList.remove('pull','ready','spin');ind.style.setProperty('--p',0);
+    const go=damp(dy)>=HOLD*.98&&sc.scrollTop<=0;y0=null;
+    if(!go){ind.classList.remove('pull','ready');spring();return;}
+    busy=true;ind.classList.remove('ready');ind.classList.add('spin');
+    sc.classList.add('ptr-back');setD(HOLD);
+    const t0=Date.now();
+    let ok=true;try{const r=await loadAll(false,true);if(r!=='gate')render(true);}catch(e){console.error(e);ok=false;}
+    const w=450-(Date.now()-t0);if(w>0)await new Promise(r=>setTimeout(r,w));
+    ind.classList.remove('spin','pull');spring();busy=false;
+    toast(ok?'Aktualizované':'Nepodarilo sa obnoviť. Skontrolujte internet.',!ok);
   };
   sc.addEventListener('touchend',end,{passive:true});
-  sc.addEventListener('touchcancel',()=>{y0=null;ind.classList.remove('pull','ready');ind.style.setProperty('--p',0);},{passive:true});
+  sc.addEventListener('touchcancel',()=>{y0=null;ind.classList.remove('pull','ready');spring();},{passive:true});
 })();
 setInterval(poll,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});

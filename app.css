@@ -1240,12 +1240,13 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
 }
 
 /* potiahnutie na obnovenie */
-.ptr{position:relative;height:0;overflow:visible;z-index:5;pointer-events:none;--p:0}
-.ptr i{position:absolute;left:50%;top:58px;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:var(--surface);border:2px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:0;transform:translateY(calc(var(--p)*14px - 14px)) rotate(calc(var(--p)*270deg));transition:opacity .15s;display:block}
-.ptr i::after{content:"";position:absolute;inset:6px;border-radius:50%;border:3px solid var(--muted);border-top-color:transparent}
-.ptr.pull i{opacity:calc(.25 + var(--p))}
-.ptr.ready i::after{border-color:var(--bar);border-top-color:transparent}
-.ptr.spin i{opacity:1;transform:translateY(6px);transition:transform .2s;animation:ptrspin .8s linear infinite}
-.ptr.spin i::after{border-color:var(--bar);border-top-color:transparent}
-@keyframes ptrspin{to{transform:translateY(6px) rotate(360deg)}}
+.ptr{position:relative;height:0;overflow:visible;z-index:5;pointer-events:none;--p:0;--d:0px}
+.ptr i{position:absolute;left:50%;top:0;width:32px;height:32px;margin-left:-16px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.2);display:block;opacity:0;transform:translateY(calc(var(--d) * .5 - 16px)) scale(calc(.5 + var(--p)*.5)) rotate(calc(var(--p)*300deg));will-change:transform,opacity}
+.ptr i::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2.5px solid var(--muted);border-top-color:transparent;transition:border-color .2s}
+.ptr.pull i,.ptr.spin i{opacity:calc(var(--p)*1.2)}
+.ptr.ready i::after,.ptr.spin i::after{border-color:var(--bar);border-top-color:transparent}
+.ptr.spin i{opacity:1;animation:ptrspin .75s linear infinite}
+@keyframes ptrspin{from{transform:translateY(calc(var(--d) * .5 - 16px)) rotate(0)}to{transform:translateY(calc(var(--d) * .5 - 16px)) rotate(360deg)}}
+.screen.ptr-back{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
+.screen{will-change:auto}
 @media (min-width:1000px){.ptr{display:none}}
