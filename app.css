@@ -1203,3 +1203,31 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
  [data-style="western"] .hstats b{font-size:46px!important;line-height:1.05}
  [data-style="western"] .sh{min-height:104px;background-size:auto 100%}
 }
+
+/* ===== mobil: prehľad pod sebou, 3 najbližšie platby, riadky platieb na celú šírku ===== */
+@media (max-width:999px){
+  .hstats.big3{grid-template-columns:1fr;gap:8px}
+  .hstats>div.st-inc,.hstats>div.st-rest,.hstats>div.st-spent{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center;padding:11px 14px}
+  .hstats>div.st-inc span,.hstats>div.st-rest span,.hstats>div.st-spent span{grid-column:1;grid-row:1;margin:0;width:auto;max-width:none;clip-path:none;background:none;padding:0;border-radius:0;box-shadow:none;color:var(--hc);font-size:13px;letter-spacing:.04em;text-align:left}
+  .hstats>div.st-inc small,.hstats>div.st-rest small,.hstats>div.st-spent small{grid-column:1;grid-row:2;min-height:0;font-size:12px}
+  .hstats>div.st-inc b,.hstats>div.st-rest b,.hstats>div.st-spent b{grid-column:2;grid-row:1/3;font-size:24px!important;margin:0;padding:0;border:0;text-align:right;white-space:nowrap}
+  .hstats>div::before{display:none!important}
+  .nu-l{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible}
+  .nu{flex:none;grid-template-columns:minmax(0,1fr);padding:7px 8px;gap:0;border-radius:10px}
+  .nu .ico{display:none}
+  .nu-t b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nu-t small{font-size:11.5px;white-space:nowrap}
+  .nu:nth-child(n+4){display:none}
+  .it-top{grid-template-columns:34px minmax(0,1fr) auto auto;column-gap:10px;row-gap:6px}
+  .it-top .pr-a{display:contents}
+  .it-top .pr-a>b{grid-column:3;grid-row:1;text-align:right;white-space:nowrap}
+  .it-top .pr-a .track{grid-column:1/-1;grid-row:2;width:100%;margin:0}
+  .it-top .padd{grid-column:4;grid-row:1;padding:6px 11px;font-size:13px;white-space:nowrap}
+  .it-top>span:empty{grid-column:4;grid-row:1}
+}
+@media (max-width:999px){
+  [data-style="western"] .hstats.big3{background:transparent;border:0;box-shadow:none;gap:8px}
+  [data-style="western"] .hstats>div.st-inc,[data-style="western"] .hstats>div.st-rest,[data-style="western"] .hstats>div.st-spent{border:1px solid #CDB88A!important;border-left:4px solid var(--hc)!important;border-radius:3px;background:#FBF4E2}
+  [data-style="retro"] .nu-t small{font-size:10.5px;letter-spacing:0}
+  [data-style="retro"] .nu{padding:7px 6px}
+}
