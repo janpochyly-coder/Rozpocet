@@ -1231,3 +1231,10 @@ body{margin:0;padding:0;padding-top:env(safe-area-inset-top,0px)}
   [data-style="retro"] .nu-t small{font-size:10.5px;letter-spacing:0}
   [data-style="retro"] .nu{padding:7px 6px}
 }
+@media (max-width:999px){
+  .pctl{display:grid;grid-template-columns:1fr;gap:8px}
+  .pctl .seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .pctl .seg button{padding:8px 6px;white-space:nowrap}
+  .pctl .subchips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .pctl .subchips .sc{justify-content:center;padding-left:6px;padding-right:6px}
+}
