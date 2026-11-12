@@ -1334,3 +1334,19 @@ html:root[data-style="western"]:not([data-theme="light"]):not(.z) .phone{backgro
 @media (max-width:999px){:root[data-style="western"][data-theme="dark"] .blk>h3{border-image:none;background:linear-gradient(180deg,#5A3A24,#3A2415);border:1px solid #2A180D;border-bottom:3px solid var(--brass);padding:9px 14px}}
 @media (min-width:1000px){:root[data-style="western"]:not([data-theme="dark"]) .mpick button,:root[data-style="western"]:not([data-theme="dark"]) .mpick svg{color:#2A1B0C;opacity:.9}
 :root[data-style="western"]:not([data-theme="dark"]) .sh::before{left:190px;right:215px}}
+
+/* výber kategórií pre súhrn v Rozpočte */
+.tilew{position:relative;display:flex;min-width:0}
+.tilew .tile{flex:1;min-width:0;padding-right:40px}
+.tchk{position:absolute;top:9px;right:9px;z-index:2;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);background:var(--surface);color:transparent;display:grid;place-items:center;padding:0;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.tchk:hover{border-color:var(--muted)}
+.tchk[aria-checked="true"]{background:var(--action);border-color:var(--action);color:var(--on-action)}
+.tchk:focus-visible{outline:2px solid var(--bar);outline-offset:2px}
+.bsel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.bsel-h{margin-top:10px;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:4px 2px;font:inherit;font-weight:600;color:var(--bar);text-decoration:underline;cursor:pointer}
+[data-style="retro"] .tchk,[data-style="western"] .tchk{border-radius:3px}
+.tilew .tile{padding-right:32px}
+.tchk{top:7px;right:7px;width:22px;height:22px;border-radius:6px}
+.tilew .tile-n b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tilew .tile-n small{font-size:12px}

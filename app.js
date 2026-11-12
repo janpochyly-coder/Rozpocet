@@ -515,15 +515,19 @@ function viewBudgets(){
   const gs=DGRP.map(g=>{const its=lv.filter(x=>grpOfKey(x.key)===g.id);return {g:g,its:its,sp:sum(its.map(x=>x.spent)),lim:sum(its.map(x=>x.limit))};}).filter(x=>x.its.length);
   if(!gs.length)return head('Rozpočet')+'<section class="card"><p class="empty">Mesiac zatiaľ nemá žiadne položky. Pridajte ich v Pláne.</p></section>';
   const sel=gs.find(x=>x.g.id===S.grp)||gs.find(x=>x.g.id!=='des')||gs[0];
-  const spentAll=sum(gs.map(x=>x.sp)),limAll=sum(gs.map(x=>x.lim)),left=limAll-spentAll;
-  const hero='<section class="card bhero"><div class="bh-top"><div><div class="small">Rozpočet mesiaca</div><div class="big2 num">'+eur(limAll)+'</div></div>'+
+  if(!S.sumSel){try{S.sumSel=JSON.parse(store.get('rr_sumsel')||'[]');}catch(e){S.sumSel=[];}}
+  S.sumSel=S.sumSel.filter(id=>gs.some(x=>x.g.id===id));
+  const marked=S.sumSel.length>0,gf=marked?gs.filter(x=>S.sumSel.includes(x.g.id)):gs;
+  const spentAll=sum(gf.map(x=>x.sp)),limAll=sum(gf.map(x=>x.lim)),left=limAll-spentAll;
+  const hero='<section class="card bhero"><div class="bh-top"><div><div class="small">'+(marked?'Rozpočet vybraných kategórií':'Rozpočet mesiaca')+'</div><div class="big2 num">'+eur(limAll)+'</div></div>'+
    '<div class="bh-st"><div><span>Minuté</span><b class="num">'+eur(spentAll)+'</b></div><div><span>'+(left>=0?'Zostáva':'Nad rozpočtom')+'</span><b class="num '+(left>=0?'pos':'neg')+'">'+eur(Math.abs(left))+'</b></div><div><span>Príjem</span><b class="num">'+eur(inc)+'</b></div></div></div>'+
-   '<div class="stack" role="img" aria-label="Rozdelenie rozpočtu podľa kategórií">'+gs.filter(x=>x.lim>0).map(x=>'<button class="g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" style="flex:'+x.lim+'" title="'+x.g.name+': '+eur(x.lim)+'" aria-label="'+x.g.name+' '+eur(x.lim)+'"></button>').join('')+'</div>'+
-   '<div class="legend">'+gs.filter(x=>x.lim>0).map(x=>'<span class="g-'+x.g.id+'"><i></i>'+x.g.name+' <b class="num">'+eur(x.lim)+'</b></span>').join('')+'</div></section>';
+   '<div class="stack" role="img" aria-label="Rozdelenie rozpočtu podľa kategórií">'+gf.filter(x=>x.lim>0).map(x=>'<button class="g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" style="flex:'+x.lim+'" title="'+x.g.name+': '+eur(x.lim)+'" aria-label="'+x.g.name+' '+eur(x.lim)+'"></button>').join('')+'</div>'+
+   '<div class="legend">'+gf.filter(x=>x.lim>0).map(x=>'<span class="g-'+x.g.id+'"><i></i>'+x.g.name+' <b class="num">'+eur(x.lim)+'</b></span>').join('')+'</div>'+(marked?'<div class="bsel"><span class="small">Zahrnuté: '+gf.length+' z '+gs.length+' kategórií</span><button type="button" class="linkbtn" data-act="gselAll">Zrušiť výber</button></div>':'<p class="small bsel-h">Tip: zaškrtnutím kategórie v zozname upravíte súhrn hore len na vybrané kategórie.</p>')+'</section>';
   const tiles='<div class="tiles" role="group" aria-label="Kategórie">'+gs.map(x=>{
     const s=status(x.sp,x.lim),l=x.lim-x.sp;
-    return '<button class="tile g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" aria-pressed="'+(sel.g.id===x.g.id)+'"><span class="tile-i">'+ic(GICON[x.g.id]||'dots',20)+'</span><span class="tile-n"><b>'+x.g.name+'</b><small class="num">'+eur(x.sp)+(x.lim>0?' z '+eur(x.lim):'')+'</small></span>'+
-     (x.lim>0?'<span class="tile-t track thin"><span class="fill '+(s.k==='ok'?'':s.k)+'" style="width:'+pctOf(x.sp,x.lim)+'%"></span></span>':'')+'</button>';
+    const chk=S.sumSel.includes(x.g.id);
+    return '<div class="tilew"><button type="button" class="tchk" data-act="gsel" data-g="'+x.g.id+'" role="checkbox" aria-checked="'+chk+'" aria-label="Zahrnúť '+x.g.name+' do súhrnu" title="Zahrnúť do súhrnu hore">'+ic('check',14)+'</button><button class="tile g-'+x.g.id+'" data-act="grp" data-g="'+x.g.id+'" aria-pressed="'+(sel.g.id===x.g.id)+'"><span class="tile-i">'+ic(GICON[x.g.id]||'dots',20)+'</span><span class="tile-n"><b>'+x.g.name+'</b><small class="num">'+eur(x.sp)+(x.lim>0?' z '+eur(x.lim):'')+'</small></span>'+
+     (x.lim>0?'<span class="tile-t track thin"><span class="fill '+(s.k==='ok'?'':s.k)+'" style="width:'+pctOf(x.sp,x.lim)+'%"></span></span>':'')+'</button></div>';
   }).join('')+'</div>';
   const sm=sel.lim-sel.sp,sst=status(sel.sp,sel.lim);
   const note=sel.g.id==='dlh'?'<p class="small bnote">Limit je mesačná splátka. Zvyšok príjmu po ostatných kategóriách: '+eur(leftover(m))+'. Zostatok dlhov spolu: '+eur(sum(CAT.dlh.subs.map(debtBal)))+'.</p>':'';
@@ -1154,6 +1158,8 @@ document.addEventListener('click',e=>{
     const key=el.dataset.s?el.dataset.c+'.'+el.dataset.s:el.dataset.c,M=M_(S.month),cur=M.lim[key]||0;
     M.lim[key]=Math.max(0,cur+ +el.dataset.d);render(true);saveLimit(M,key);
   }
+  else if(a==='gsel'){const g=el.dataset.g,i=S.sumSel.indexOf(g);if(i>=0)S.sumSel.splice(i,1);else S.sumSel.push(g);store.set('rr_sumsel',JSON.stringify(S.sumSel));render(true);}
+  else if(a==='gselAll'){S.sumSel=[];store.set('rr_sumsel','[]');render(true);}
   else if(a==='grp'){S.grp=el.dataset.g;S.expanded=null;render(true);}
   else if(a==='trend'){S.trend=el.dataset.v;render(true);}
   else if(a==='anatab'){S.anaTab=el.dataset.v;render();}
