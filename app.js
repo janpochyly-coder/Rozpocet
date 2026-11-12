@@ -427,11 +427,12 @@ function itemRow(it,M,show){
 function viewHome(){
   const m=S.month,M=M_(m),spent=total(m),inc=income(m),rec=received(m),lv=monthLeaves(m);
   const rest=sum(lv.map(x=>Math.max(0,x.limit-x.spent))),free=inc-spent-rest;
+  const plan=incExp(m),real=(M.status==='closed'&&!rec)?plan:rec;
   const st0=lv.map(x=>({x:x,s:itemState(x,M)})),paidN=st0.filter(o=>o.s==='paid').length;
   const nextUp=st0.filter(o=>o.x.day&&(o.s==='late'||o.s==='soon'||o.s==='wait')).sort((a,b)=>(a.s==='late'?0:1)-(b.s==='late'?0:1)||a.x.day-b.x.day).slice(0,5);
   const nextHtml=nextUp.length&&M.status!=='planned'?'<div class="nextup"><span class="small">Najbližšie platby</span><div class="nu-l">'+nextUp.map(o=>'<button type="button" class="nu g-'+grpOfKey(o.x.key)+'" data-act="addFor" data-key="'+o.x.key+'"><span class="ico gi">'+ic(iconOf(o.x.key),16)+'</span><span class="nu-t"><b>'+esc(o.x.name)+'</b><small class="'+(o.s==='late'?'d-late':o.s==='soon'?'d-soon':'')+'">'+o.x.day+'. '+(M.mo+1)+'. · '+eur(Math.max(0,o.x.limit-o.x.spent))+'</small></span></button>').join('')+'</div></div>':'';
   const hero='<section class="card hero"><div class="hstats big3">'+
-   '<div class="st-inc"><span>K dispozícii</span><b class="num">'+eur(inc)+'</b><small>'+(M.status!=='closed'&&rec<inc?'prijaté '+eur(rec)+' z očakávaných':'podľa príjmov')+'</small></div>'+
+   '<div class="st-inc"><span>K dispozícii</span><b class="num">'+eur(real-spent)+'</b><small>príjmy '+eur(real)+' · plán '+eur(plan)+'</small></div>'+
    '<div class="st-rest"><span>Zostáva uhradiť</span><b class="num">'+eur(rest)+'</b><small>'+(rest>0?'z plánovaných výdavkov':'všetko uhradené')+'</small></div>'+
    '<div class="st-spent"><span>Minuté</span><b class="num">'+eur(spent)+'</b><small>v tomto mesiaci</small></div></div>'+
    '<div class="track" role="img" aria-label="Minuté '+eur(spent)+', zostáva uhradiť '+eur(rest)+' z príjmu '+eur(inc)+'"><div class="fill'+(spent+rest>inc?' bad':'')+'" style="width:'+pctOf(spent,inc)+'%"></div></div>'+
